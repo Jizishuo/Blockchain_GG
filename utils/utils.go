@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/hex"
 	"fmt"
 	"os"
 )
@@ -13,3 +14,7 @@ func AccessCheck(path string) error {
 	return nil
 }
 
+// hex编码的字符串s代表的数据
+func FromHex(s string) ([]byte, error) {
+	return hex.DecodeString(s)
+}

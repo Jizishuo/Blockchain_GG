@@ -5,8 +5,10 @@ import (
 	"Blockchain_GG/utils"
 	"encoding/json"
 	"fmt"
+	"Blockchain_GG/crypto"
 	"io/ioutil"
 	"net"
+	"runtime"
 )
 
 type config struct {
@@ -48,7 +50,10 @@ func parserConfig(cf string) (*config, error) {
 	if err := json.Unmarshal(jsonContent, &conf); err != nil {
 		return nil, fmt.Errorf("config parse failed:%v", err)
 	}
-	//if err := ver
+	if err := verifyConfig(conf); err != nil {
+		return nil, err
+	}
+	return conf, nil
 
 }
 
@@ -71,5 +76,40 @@ func verifyConfig(c *config) error {
 		return fmt.Errorf("invalid max perr number: %d", c.MaxPeers)
 	}
 
-	if c.LogLevel < utils.
+	if c.LogLevel < utils.LogErrorLevel || c.LogLevel >utils.LogDebugLevel {
+		return fmt.Errorf("invalid log level: %d", c.LogLevel)
+	}
+	if err := utils.AccessCheck(c.DataPath); err != nil {
+		return err
+	}
+
+	fmt.Printf("data path: %d\n", c.DataPath)
+
+	if c.Key.Type != crypto.SealKeyType && c.Key.Type != crypto.PlainKeyType {
+		return fmt.Errorf("invalid key type")
+	}
+	if err := utils.AccessCheck(c.Key.Path); err != nil {
+		return err
+	}
+
+	if len(c.BlockDifficultyLimit) != 8 || len(c.EvidenceDifficultyLimit) != 8 {
+		return fmt.Errorf("invalid difficulty limit")
+	}
+
+	if c.BlockInterval <= 0 {
+		return fmt.Errorf("invalid block interval")
+	}
+	if c.ParalleMine < 0 || c.ParalleMine > runtime.NumCPU() {
+		return fmt.Errorf("invalid parallel num")
+	}
+
+	if len(c.Genesis) == 0 {
+		return fmt.Errorf("invalid genesis")
+	}
+
+	if c.HTTPPort <=0 || c.HTTPPort > 65535 || c.HTTPPort == c.Port {
+		return fmt.Errorf("invalid http port: %d", c.HTTPPort)
+	}
+
+	return nil
 }
