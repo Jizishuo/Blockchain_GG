@@ -12,3 +12,4 @@ func AccessCheck(path string) error {
 	}
 	return nil
 }
+
