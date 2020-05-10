@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Blockchain_GG/p2p/peer"
 	"Blockchain_GG/params"
 	"Blockchain_GG/utils"
 	"encoding/json"
@@ -112,4 +113,17 @@ func verifyConfig(c *config) error {
 	}
 
 	return nil
+}
+
+func parseSeeds(seeds []string) []*peer.Peer {
+	var result []*peer.Peer
+	for _, seed := range seeds {
+		ip, port := utils.ParseUPPort(seed)
+		if ip == nil {
+			continue
+		}
+		p := peer.NewPeer(ip, port, nil)
+		result = append(result, p)
+	}
+	return result
 }

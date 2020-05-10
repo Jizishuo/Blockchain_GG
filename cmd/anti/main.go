@@ -2,8 +2,10 @@ package main
 
 import (
 	"Blockchain_GG/crypto"
+	"Blockchain_GG/p2p/peer"
 	"Blockchain_GG/utils"
 	"flag"
+	"Blockchain_GG/p2p"
 	"log"
 	"github.com/btcsuite/btcd/btcec"
 )
@@ -36,6 +38,23 @@ func main() {
 	}
 	pubKey := privKey.PubKey()
 
-	// p2p 供应
+	// p2p 供应 peer provider
+	provider := peer.NewProvider(conf.IP, conf.Port, pubKey)
+	seeds := parseSeeds(conf.Seeds)
+	provider.AddSeeds(seeds)
+	provider.Start()
+
+	// p2p node
+	nodeConfig := &p2p.Config{
+		NodeIP: conf.IP,
+		NodePort: conf.Port,
+		Provider: provider,
+		MaxPeerNum: conf.MaxPeers,
+		PrivKey: privKey,
+		Type: conf.NodeType,
+		ChainID: conf.ChainID,
+	}
+	node := p2p.NewNode(nodeConfig)
+	node.Start()
 
 }
