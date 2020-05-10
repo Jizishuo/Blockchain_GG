@@ -7,7 +7,8 @@ import (
 	"net"
 )
 
-// // Peer is a node that can 连接 to
+// Peer is a node that can 连接 to
+// 同行
 type Peer struct {
 	IP net.IP
 	Port int

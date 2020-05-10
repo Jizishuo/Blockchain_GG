@@ -12,6 +12,7 @@ const (
 	coolingExpiredTime = 5*time.Minute
 )
 
+// 表imp(进出口)
 type tableImp struct {
 	selfID string
 	seeds map[string]*pstate // "ip:port" as key

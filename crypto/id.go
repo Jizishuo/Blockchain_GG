@@ -17,3 +17,14 @@ func PrivKeyToID(privKey *btcec.PrivateKey) string {
 	pubKey := privKey.PubKey()
 	return PubKeyToID(pubKey)
 }
+
+// IDToBytes returns a public key Serialize compressed bytes; if error happens returns nil
+func IDToBytes(id string) []byte {
+	pubKeyB, _ := base32Codec.DecodeString(id)
+	return pubKeyB
+}
+
+// BytesToID return a peer id from the public key Serialize compressed bytes
+func BytesToID(compressedKey []byte) string {
+	return base32Codec.EncodeToString(compressedKey)
+}

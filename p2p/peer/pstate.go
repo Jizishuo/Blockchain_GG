@@ -12,6 +12,7 @@ var (
 	initTimepoint = time.Unix(0,0)
 )
 
+// p状态
 type pstate struct {
 	*Peer
 	// 种子不应该删除，一旦他们被添加到peer
