@@ -58,20 +58,23 @@ func (p *provider) Start() {
 		logger.Fatalln("start udp server failed")
 	}
 	go p.loop()
+	p.lm.StartWorking()
 }
 
 func (p *provider) Stop() {
-
+	if p.lm.Stop() {
+		p.udp.Stop()
+	}
 }
 
 // 添加种子
-func (p *provider) AddSeeds() {
-
+func (p *provider) AddSeeds(seeds []*Peer) {
+	p.table.addPeers(seeds, true)
 }
 
 // 获取同行
-func (p *provider) GetPeers() {
-
+func (p *provider) GetPeers(expect int, exclude map[string]bool) ([]*Peer, error) {
+	return p.table.getPeers(expect, exclude), nil
 }
 
 // 循环/回路
@@ -90,15 +93,15 @@ func (p *provider) loop() {
 		select {
 		case <-p.lm.D:
 			return
-			case <- taskTicker.C:
-				p.ping()
-				p.getNeighbours()
+		case <- taskTicker.C:
+			p.ping()
+			p.getNeighbours()
 		case pkt := <- recvQ :
-			p.h
-
+			p.handleRecv(pkt)
+		case <-refrsshTicker.C:
+			p.refresh()
 		}
 	}
-
 }
 
 
@@ -148,8 +151,12 @@ func (p *provider) handleRecv(pkt *utils.UDPPacket) {
 	case discover.MsgPong:
 		p.hanlePong(pkt.Data, pkt.Addr)
 	case discover.MsgGetNeighbours:
-		p.ha
-
+		p.handleGetNeigoubours(pkt.Data, pkt.Addr)
+	case discover.MsgNeighbours:
+		p.handleNeigoubours(pkt.Data, pkt.Addr)
+	default:
+		logger.Warn("unknown op: %d\n", head.Type)
+		return
 	}
 }
 
@@ -217,8 +224,34 @@ func (p *provider) handleGetNeigoubours(data []byte, remoteAddr *net.UDPAddr) {
 	exclude[remotoID] = true
 
 	neighbours := p.table.getPeers(maxNeighboursRspNum,exclude)
-	neighboursMsg := p.getNeighbours()
+	neighboursMsg := p.genNeighbours(neighbours)
+	p.send(neighboursMsg, remoteAddr)
 
+	// also notify the neighbours about the getter
+	putMsg := p.genNeighbours([]*Peer{NewPeer(remoteAddr.IP, remoteAddr.Port, remotePubKey)})
+	for _, n :=range neighbours {
+		if neighbourAddr, err := net.ResolveUDPAddr("udp", n.Address()); err==nil {
+			p.send(putMsg, neighbourAddr)
+		}
+	}
+}
+
+func (p *provider) handleNeigoubours(data []byte, remoteAddr *net.UDPAddr) {
+	neighbours, err := discover.UnmarshalNeighbours(bytes.NewBuffer(data))
+	if err != nil {
+		logger.Warn("receive error Neighbours:%v\n", err)
+		return
+	}
+	var peers []*Peer
+	for _, n := range neighbours.Nodes {
+		pubKey, err := btcec.ParsePubKey(n.PubKey, btcec.S256())
+		if err != nil {
+			logger.Warn("parse Neighbours PubKey faild:%v\n", err)
+			continue
+		}
+		peers = append(peers, NewPeer(n.Addr.IP, int(n.Addr.Port), pubKey))
+	}
+	p.table.addPeers(peers, false)
 }
 
 func (p *provider) genNeighbours(peers []*Peer) []byte {
@@ -229,5 +262,15 @@ func (p *provider) genNeighbours(peers []*Peer) []byte {
 		nodes = append(nodes, node)
 	}
 	neighbours := discover.NewNeighbours(nodes)
-	return neighbours.
+	return neighbours.Marshal()
+}
+
+func (p *provider) refresh() {
+	p.table.refresh()
+	curr := time.Now()
+	for k, v := range p.pingHash {
+		if curr.Sub(v) > pingHashExpiredTime {
+			delete(p.pingHash, k)
+		}
+	}
 }
