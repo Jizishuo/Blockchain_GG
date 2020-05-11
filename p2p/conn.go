@@ -69,6 +69,7 @@ func (c *conn) loop() {
 	}
 }
 
+
 func (c *conn) send(protocolID uint8, data []byte) {
 	cipherText, err := c.ec.encrypt(data)
 	if err != nil {
