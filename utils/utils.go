@@ -32,6 +32,12 @@ var logger = &Logger{
 func Uint8Len(data []byte) uint8 {
 	return uint8(len(data))
 }
+
+// Uint32Len returns bytes length in uint32 type
+func Uint32Len(data []byte) uint32 {
+	return uint32(len(data))
+}
+
 // ToHex returns the upper case hexadecimal encoding string
 func ToHex(data []byte) string {
 	return strings.ToUpper(hex.EncodeToString(data))
