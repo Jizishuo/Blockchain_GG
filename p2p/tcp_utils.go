@@ -54,3 +54,25 @@ func buildTCPPacket(payload []byte, protocolID uint8) []byte {
 	buf.Write(payload)
 	return buf.Bytes()
 }
+
+func splitTCPStream(received *bytes.Buffer) ([][]byte, error) {
+	var length uint32
+	var packets [][]byte
+
+	for received.Len() >tcpHeaderSize {
+		// 阅读对接收没有影响
+		peeker := bytes.NewReader(received.Bytes())
+		binary.Read(peeker, binary.BigEndian, &length)
+
+		packetLen:= tcpHeaderSize + length
+		if received.Len() < int(packetLen) {
+			break
+		}
+		packet := make([]byte, packetLen)
+		if _, err := received.Read(packet); err != nil {
+			return nil, err
+		}
+		packets = append(packets, packet)
+	}
+	return packets, nil
+}

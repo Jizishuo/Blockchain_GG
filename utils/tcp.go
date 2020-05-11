@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"net"
 	"time"
@@ -17,7 +18,10 @@ const (
 )
 
 type TCPServer interface {
-	GetTCPAcceptConnChannel() <- chan tcpConn
+	GetTCPAcceptConnChannel() <- chan TCPConn
+	Addr() string
+	Start() bool
+	Stop()
 }
 
 type tcpConn struct {
@@ -26,6 +30,15 @@ type tcpConn struct {
 	disconnectCb func(addr net.Addr)
 	recvQ chan []byte
 	sendQ chan []byte
+	lm *LoopMode
+}
+
+type tcpServer struct {
+	ip net.IP
+	port int
+	//代表一个TCP网络的监听者。使用者应尽量使用Listener接口而不是假设（网络连接为）TCP。
+	ln *net.TCPListener
+	acceptConn chan TCPConn
 	lm *LoopMode
 }
 
@@ -60,6 +73,64 @@ func newTCPConn(conn *net.TCPConn) TCPConn {
 	result.start()
 	return result
 }
+
+func NewTCPServer(ip net.IP, port int) TCPServer {
+	return &tcpServer{
+		ip: ip,
+		port: port,
+		acceptConn: make(chan TCPConn, tcpConnQSize),
+		lm: NewLoop(1),
+	}
+}
+func (s *tcpServer) GetTCPAcceptConnChannel() <- chan TCPConn {
+	return s.acceptConn
+}
+func (s *tcpServer) Addr() string {
+	return fmt.Sprintf("%s : %d", s.ip.String(), s.port)
+}
+func (s *tcpServer) Start() bool {
+	lnAddr := &net.TCPAddr{
+		IP: s.ip,
+		Port: s.port,
+	}
+	var err error
+	if s.ln, err = net.ListenTCP("tcp", lnAddr); err != nil {
+		logger.Warn("tcp server listen failed: %v\n", err)
+		return false
+	}
+	go s.loop()
+	s.lm.StartWorking()
+	return true
+}
+
+func (s *tcpServer) Stop() {
+	if s.lm.Stop() {
+		s.ln.Close()
+	}
+}
+
+func (s *tcpServer) loop() {
+	s.lm.Add()
+	defer s.lm.Done()
+
+	for {
+		select {
+		case <- s.lm.D:
+			return
+		default:
+			s.ln.SetDeadline(time.Now().Add(tcpListenTimeout))
+			if conn, err := s.ln.AcceptTCP(); err == nil {
+				select {
+				case s.acceptConn <- newTCPConn(conn):
+				default:
+					logger.Warnln("tcp server listen accept queue full, drop connection")
+					conn.Close()
+				}
+			}
+		}
+	}
+}
+
 
 func(c *tcpConn) Send(data []byte) {
 	c.sendQ <- data

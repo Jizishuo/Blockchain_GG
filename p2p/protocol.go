@@ -1,5 +1,10 @@
 package p2p
 
+import (
+	"errors"
+	"fmt"
+
+)
 
 // 协议是 p2p 网络协议必须实现的接口
 // 协议
@@ -29,4 +34,37 @@ type PeerData struct {
 // ErrPeer 未找到意味着未找到对等体
 type ErrPeerNotFound struct {
 	Peer string
+}
+
+func (p ErrPeerNotFound) Error() string {
+	return fmt.Sprintf("Peer : %s not found", p.Peer)
+}
+
+// ErrNoPeers 意味着在网络上找不到任何对等体
+var ErrNoPeers = errors.New("Not found any peer on the network yep")
+
+////////
+
+type protocolRunner struct {
+	protocol Protocol
+	Data chan *PeerData
+	sendFunc func(p Protocol, dp *PeerData) error
+	n *node
+}
+
+func newProtocolRunner(protocol Protocol, sendFunc func(p Protocol, dp *PeerData) error) *protocolRunner {
+	renner := &protocolRunner{
+		protocol: protocol,
+		Data: make(chan *PeerData, 2048),
+		sendFunc: sendFunc,
+	}
+	return renner
+}
+
+func (p *protocolRunner) Send(dp *PeerData) error {
+	return p.sendFunc(p.protocol, dp)
+}
+
+func (p *protocolRunner) GetRecvChan() <- chan *PeerData {
+	return p.Data
 }
