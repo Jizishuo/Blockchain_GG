@@ -5,7 +5,7 @@ import (
 	"Blockchain_GG/params"
 	"Blockchain_GG/utils"
 	"fmt"
-	"github.com/996.Blockchain/crypto"
+	"Blockchain_GG/crypto"
 	"github.com/btcsuite/btcd/btcec"
 	"net"
 	"sync"
@@ -26,7 +26,7 @@ type Config struct {
 }
 // 节点是一个节点，可以与其他人在p2p网络中通信。
 type Node interface {
-	AddProtocol(p Protocol) ProtocolRunner
+	AddProtocol(p Protocol) ProtocolRunner  //加协议
 	Start()
 	Stop()
 }
@@ -42,7 +42,7 @@ func NewNode(c *Config) Node {
 		nodeType: c.Type,
 		maxPeersNum: c.MaxPeerNum,
 		peerProvider: c.Provider,
-		protocols: make(map[uint8]*ProtocolRunner),
+		protocols:   make(map[uint8]*protocolRunner),
 		ngBlackList: make(map[string]time.Time),
 		tcpConnectFunc: utils.TCPConnectTo,
 		connectTask: make(chan *peer.Peer, c.MaxPeerNum),
@@ -123,15 +123,32 @@ func (n *node) loop() {
 	//如果d<=0会panic。关闭该Ticker可以释放相关资源
 	getPeersToConnectTicker := time.NewTicker(time.Second*10)
 	statusReportTicker := time.NewTicker(time.Second*15)
-	ngBlackCleanTicker := time.NewTicker(time.Minute*1)
+	ngBlackListCleanTicker := time.NewTicker(time.Minute*1)
 
 	acceptConn := n.tcpServer.GetTCPAcceptConnChannel()
 	for {
 		select {
 		case <- n.lm.D:
 			return
-		case <- getpeers:
-
+		case <- getPeersToConnectTicker.C:
+			n.getPeersToConnect()
+		case <- statusReportTicker.C:
+			n.statusReport()
+		case <- ngBlackListCleanTicker.C:
+			n.cleanNgBlackList()
+		case newPeer := <- n.connectTask:
+			go func() {
+				n.lm.Add()
+				n.setupConn(newPeer)
+				n.lm.Done()
+			}()
+		case newPeerConn := <- acceptConn:
+			go func() {
+				n.lm.Add()
+				newPeerConn.SetSplitFunc(splitTCPStream)
+				n.recvConn(newPeerConn)
+				n.lm.Done()
+			}()
 		}
 	}
 
@@ -179,7 +196,76 @@ func (n *node) setupConn(newPeer *peer.Peer) {
 		logger.Warn("setup connection to %v failed %v", newPeer, err)
 		return
 	}
-	conn.SetSplitFunc()
+	conn.SetSplitFunc(splitTCPStream)
+	ec, err := n.ng.handshakeIo(conn, newPeer)
+	if err != nil {
+		logger.Warn("handshake to %v failed: %v", newPeer, err)
+		conn.Disconnect()
+		n.addNgBlackList(newPeer.ID)
+		return
+	}
+	n.addConn(newPeer, conn, ec)
+}
+
+func (n* node) recvConn(conn utils.TCPConn) {
+	accept := false
+	if n .connMgr.size() < n.maxPeersNum {
+		accept = true
+	}
+	peer ,ec, err := n.ng.recvHandshake(conn, accept)
+	if err != nil {
+		logger.Warn("handle handshake from remote failed: %v\n", err)
+		conn.Disconnect()
+		return
+	}
+	if !accept {
+		conn.Disconnect()
+		return
+	}
+	n.addConn(peer, conn, ec)
+}
+
+func(n *node) addConn(peer *peer.Peer, conn utils.TCPConn, ec codec) {
+	if err := n.connMgr.add(peer, conn, ec, n.recv); err != nil {
+		logger.Debug("addConn failed :%v\n", err)
+		conn.Disconnect()
+	}
+}
+
+func (n *node) send(p Protocol, dp *PeerData) error {
+	return n.connMgr.send(p, dp)
+}
+
+func (n *node) recv(peer string, protocolID uint8, data []byte) {
+	if runner, ok := n.protocols[protocolID]; ok {
+		select {
+		case runner.Data <- &PeerData{
+			Peer: peer,
+			Data: data,
+		}:
+		default:
+			logger.Warn("protocol %s recv packet queue full, drop it",
+				runner.protocol.Name())
+		}
+	}
+}
+
+func (n *node) addNgBlackList(peerID string) {
+	n.ngMutex.Lock()
+	defer n.ngMutex.Unlock()
+	n.ngBlackList[peerID] = time.Now()
+}
+
+func (n *node) cleanNgBlackList() {
+	n.ngMutex.Lock()
+	defer n.ngMutex.Unlock()
+
+	curr := time.Now()
+	for k, v := range n.ngBlackList {
+		if curr.Sub(v) > time.Minute*30 {
+			delete(n.ngBlackList, k)
+		}
+	}
 }
 
 func (n *node) getExcludePeers() map[string]bool {

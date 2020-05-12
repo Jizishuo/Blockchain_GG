@@ -48,7 +48,7 @@ type TCPConn interface {
 	SetSplitFunc(func(received *bytes.Buffer) ([][]byte, error))
 	SetDisconnectCb(func(addr net.Addr))
 	RemoteAddr() net.Addr
-	Disconnect()
+	Disconnect()  //断开
 }
 
 func TCPConnectTo(ip net.IP, port int) (TCPConn, error) {

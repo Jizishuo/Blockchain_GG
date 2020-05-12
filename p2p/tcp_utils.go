@@ -22,6 +22,7 @@ Protocol	1
 
 const tcpHeaderSize = 9
 
+// 验证tcp包
 func verifyTCPPacket(packet []byte) (bool, []byte, uint8) {
 	var length uint32
 	var crc uint32

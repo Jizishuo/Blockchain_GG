@@ -4,6 +4,7 @@ import (
 	"Blockchain_GG/p2p/peer"
 	"Blockchain_GG/utils"
 	"fmt"
+	"net"
 	"sync"
 )
 
@@ -18,6 +19,7 @@ type connManager interface {
 	add(peer *peer.Peer, conn utils.TCPConn, ec codec, handler recvHandller) error
 	String() string
 }
+
 type connManagerImp struct {
 	mutex sync.Mutex
 	conns map[string]*conn // <peer id, conn>
@@ -39,6 +41,7 @@ func (c *connManagerImp) start() {
 	go c.loop()
 	c.lm.StartWorking()
 }
+
 func (c *connManagerImp) stop() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -48,11 +51,13 @@ func (c *connManagerImp) stop() {
 		}
 	}
 }
+
 func (c *connManagerImp) size() int {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	return len(c.conns)
 }
+
 func (c *connManagerImp) getIDs() []string {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -105,7 +110,44 @@ func (c *connManagerImp) add(peer *peer.Peer, conn utils.TCPConn, ec codec, hand
 	if len(c.conns) >= c.maxPeerNum {
 		return fmt.Errorf("over max peer(%d) limits", len(c.conns))
 	}
-
+	connection := newConn(peer, conn, ec, handler)
+	c.conns[peer.ID] = connection
+	conn.SetDisconnectCb(func(addr net.Addr) {
+		logger.Debug("disconnect peer %v, address %v\n", peer.ID, addr)
+		c.removeConn(peer.ID)
+	})
+	connection.start()
+	logger.Debug("add conn of %v\n", peer)
+	return nil
 
 }
-func (c *connManagerImp) String() string
+func (c *connManagerImp) String() string {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	var result string
+	for k, v := range c.conns {
+		result += "[" + k[:6] + " " +v.p.Address() + "]"
+	}
+	return result
+}
+
+func (c *connManagerImp) loop() {
+	c.lm.Add()
+	defer c.lm.Done()
+
+	for {
+		select {
+		case <- c.lm.D:
+			return
+		case rmID := <- c.removing:
+			c.mutex.Lock()
+			delete(c.conns, rmID)
+			c.mutex.Unlock()
+		}
+	}
+}
+
+func (c *connManagerImp) removeConn(peerID string) {
+	c.removing <- peerID
+}

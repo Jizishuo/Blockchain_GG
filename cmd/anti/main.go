@@ -4,6 +4,7 @@ import (
 	"Blockchain_GG/crypto"
 	"Blockchain_GG/p2p/peer"
 	"Blockchain_GG/utils"
+	"MY_GO/My_Blog/dao/db"
 	"flag"
 	"Blockchain_GG/p2p"
 	"log"
@@ -56,5 +57,9 @@ func main() {
 	}
 	node := p2p.NewNode(nodeConfig)
 	node.Start()
+
+	// db
+	if err = db.Init()
+
 
 }
