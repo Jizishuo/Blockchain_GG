@@ -17,7 +17,7 @@ const (
 var (
 	// 	空证据根用于块标题的字段
 	//	这意味着块不包含任何证据
-	EmptyEvidencePrrt = []byte("EMPTY")
+	EmptyEvidenceRoot = []byte("EMPTY")
 )
 
 /*

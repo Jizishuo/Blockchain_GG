@@ -4,6 +4,7 @@ import (
 	"Blockchain_GG/serialize/storage"
 	"Blockchain_GG/utils"
 	"Blockchain_GG/serialize/cp"
+	"bytes"
 	"github.com/dgraph-io/badger"
 	"path/filepath"
 	"time"
@@ -40,7 +41,7 @@ func(b *badgerDB) Init(path string) error {
 
 	b.DB, err = badger.Open(opts)
 	if err != nil {
-		return b.warpError(err)
+		return b.wrapError(err)
 	}
 	b.start()
 	return nil
@@ -73,7 +74,7 @@ func (b *badgerDB) PutGenesis(block *cp.Block) error {
 		if err := b.putBlockTX(block, 1, tx); err != nil {
 			return err
 		}
-		if err := b.updateLatestHeightTX(1, tx); err != nil {
+		if err := b.updateLatesHeightTX(1, tx); err != nil {
 			return err
 		}
 		return nil
@@ -93,10 +94,10 @@ func (b *badgerDB) PutBlock(block *cp.Block, height uint64) error {
 		return ErrInvalidHeight{height, expectHeight}
 	}
 	wf := func(tx *badger.Txn) error {
-		if err := b.PutBlockTX(block, height); err != nil {
+		if err := b.putBlockTX(block, height, tx); err != nil {
 			return err
 		}
-		if err := b.updateLatestHeightTX(height, tx); err != nil {
+		if err := b.updateLatesHeightTX(height, tx); err != nil {
 			return err
 		}
 		return nil
@@ -134,7 +135,7 @@ func (b *badgerDB) GetHeaderViaHeight(height uint64) (*cp.BlockHeader, []byte, e
 }
 
 func (b *badgerDB) GetHeaderViaHash(h []byte) (*cp.BlockHeader, uint64, error) {
-	height, err := b.getHaderHeight(h)
+	height, err := b.getHeaderHeight(h)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -150,7 +151,7 @@ func (b *badgerDB) GetBlockViaHeight(height uint64) (*cp.Block, []byte, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	result, err := b.getCPBlock(height, hash)
+	result, err := b.getCpBlock(height, hash)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -158,27 +159,124 @@ func (b *badgerDB) GetBlockViaHeight(height uint64) (*cp.Block, []byte, error) {
 }
 
 func (b *badgerDB) GetBlcokViaHash(h []byte) (*cp.Block, uint64, error) {
-	height, err := b.
+	height, err := b.getHeaderHeight(h)
+	if err!=nil {
+		return nil, 0, err
+	}
+	result, err := b.getCpBlock(height, h)
+	if err != nil {
+		return nil, 0, err
+	}
+	return result, height, nil
 }
 
 func (b *badgerDB) GetEvidenceViaHash(h []byte) (*cp.Evidence, uint64, error) {
-	return instance.GetEvidenceViaHash(h)
+	height, err := b.getEvidenceHeight(h)
+	if err!=nil {
+		return nil, 0, err
+	}
+	evd, err := b.getEvidence(height, h)
+	if err!=nil {
+		return nil, 0, err
+	}
+	return evd.Evidence, height, nil
 }
 func (b *badgerDB) GetEvidenceViaKey(pubKey []byte) ([][]byte, []uint64, error) {
-	return instance.GetEvidenceViaKey(pubKey)
+	var evdsHash [][]byte
+	var heights []uint64
+
+	rf := func(txn *badger.Txn) error {
+		it := txn.NewIterator(badger.DefaultIteratorOptions)
+		defer it.Close()
+
+		prefix := getAccountEvidenceKeyPrefix(pubKey)
+		prefixLen := len(prefix)
+		for it.Seek(prefix); it.ValidForPrefix(prefix);it.Next() {
+			item := it.Item()
+			k:= item.Key()
+			hash := make([]byte, len(k)-prefixLen)
+			copy(hash, k[prefixLen:])
+			evdsHash = append(evdsHash, hash)
+			err := item.Value(func(val []byte) error {
+				heights = append(heights, byteh(val))
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	if err := b.view(rf); err!=nil {
+		return nil, nil, b.wrapError(err)
+	}
+	return evdsHash, heights, nil
 }
 
 func (b *badgerDB) HasEvidence(h []byte) bool {
-	return instance.HasEvidence(h)
+	rf := func(tx *badger.Txn) error {
+		key := getEvidenceHeightKey(h)
+		_, err := tx.Get(key)
+		return err
+	}
+	err:= b.View(rf)
+	if err == nil {
+		return true
+	} else if err == badger.ErrKeyNotFound {
+		return false
+	} else {
+		logger.Warn("check evidence failed: %v\n", err)
+		return true
+	}
 }
 func (b *badgerDB) GetScoreViaKey(pubKey []byte) (uint64, error) {
-	return instance.GetScoreViaKey(pubKey)
+	var result uint64
+	rf := func(tx *badger.Txn) error {
+		scoreKey := getScoreKey(pubKey)
+		item, err := tx.Get(scoreKey)
+		if err !=nil {
+			return err
+		}
+		return item.Value(func(val []byte) error {
+			result = byteh(val)
+			return nil
+		})
+	}
+	err := b.View(rf)
+	if err == badger.ErrKeyNotFound {
+		return 0, nil
+	}
+	if err!= nil {
+		return 0, b.wrapError(err)
+	}
+	return result, nil
 }
+
 func (b *badgerDB) GetLatestHeight() (uint64, error) {
-	return instance.GetLatestHeight()
+	var result uint64
+	rf := func(tx *badger.Txn) error {
+		item, err := tx.Get(mLatestHeight)
+		if err !=nil {
+			return err
+		}
+		return item.Value(func(val []byte) error {
+			result = byteh(val)
+			return nil
+		})
+	}
+	return result, b.view(rf)
 }
+
 func (b *badgerDB) GetLatesHeader() (*cp.BlockHeader, uint64, []byte, error) {
-	return instance.GetLatesHeader()
+	lastHeight, err := b.GetLatestHeight()
+	if err != nil {
+		return nil, 0, nil, err
+	}
+	header, hash, err := b.GetHeaderViaHeight(lastHeight)
+	if header == nil {
+		return nil, 0, nil, err
+	}
+	return header, lastHeight, hash, nil
 }
 
 func (b *badgerDB) getHeaderHeight(hash []byte) (uint64, error) {
@@ -196,9 +294,119 @@ func (b *badgerDB) getHeaderHeight(hash []byte) (uint64, error) {
 	}
 	return result, b.view(rf)
 }
+func (b *badgerDB) getEvidenceHeight(hash []byte) (uint64, error) {
+	var result uint64
+	evidenceHeightKey := getEvidenceHeightKey(hash)
+	rf := func(tx *badger.Txn) error {
+		item, err := tx.Get(evidenceHeightKey)
+		if err!=nil {
+			return err
+		}
+		return item.Value(func(val []byte) error {
+			result = byteh(val)
+			return nil
+		})
+	}
+	return result, b.view(rf)
+}
+
+func (b *badgerDB) getHeader(height uint64, hash []byte) (*storage.BlockHeader, error) {
+	var result *storage.BlockHeader
+	headerKey := getHeaderKey(height, hash)
+	rf := func(tx *badger.Txn) error {
+		item, err := tx.Get(headerKey)
+		if err!=nil {
+			return err
+		}
+		return item.Value(func(val []byte) error {
+			result, err = storage.UnmarshalBlockHeader(bytes.NewReader(val))
+			return err
+		})
+	}
+	return result, b.view(rf)
+}
+
+func (b *badgerDB) getBlock(height uint64, hash []byte) (*storage.Block, error) {
+	var result *storage.Block
+	blockKey := getBlockKey(height, hash)
+	rf := func(tx *badger.Txn) error {
+		item, err := tx.Get(blockKey)
+		if err!=nil {
+			return err
+		}
+		return item.Value(func(val []byte) error {
+			result, err = storage.UnmarshalBlock(bytes.NewReader(val))
+			return err
+		})
+	}
+	return result, b.view(rf)
+}
+
+func (b *badgerDB) getEvidence(height uint64, hash []byte) (*storage.Evidence, error) {
+	var result *storage.Evidence
+	evidenceKey := getEvidenceKey(height, hash)
+	rf := func(tx *badger.Txn) error {
+		item, err := tx.Get(evidenceKey)
+		if err != nil {
+			return err
+		}
+		return item.Value(func(val []byte) error {
+			result, err = storage.UnmaishalEvidence(bytes.NewReader(val))
+			return err
+		})
+	}
+	return result, b.view(rf)
+}
+
+func (b *badgerDB) getCpBlock(height uint64, hash []byte) (*cp.Block, error) {
+	header, err := b.getHeader(height, hash)
+	if err!=nil {
+		return nil, err
+	}
+	var evds []*cp.Evidence
+	if !header.BlockHeader.IsEmptyEvidenceRoot() {
+		storageBlock, err := b.getBlock(height, hash)
+		if err != nil {
+			return nil, err
+		}
+		for _, eHash := range storageBlock.EvdsHash {
+			evd, err := b.getEvidence(height, eHash)
+			if err != nil {
+				return nil, err
+			}
+			evds = append(evds, evd.Evidence)
+		}
+	}
+	return &cp.Block{
+		BlockHeader:header.BlockHeader,
+		Evds: evds,
+	}, nil
+}
 
 func (b *badgerDB) putBlockTX(block *cp.Block, height uint64, tx *badger.Txn) error {
-	hash := block.G
+	hash := block.GetSerializeHash()
+	header := storage.NewBlockHeader(block.BlockHeader, height)
+	if !block.IsEmptyEvidenceRoot() {
+		if err :=b.putEvidenceTX(hash, block.Evds, height, tx);err!=nil {
+			return err
+		}
+	} else {
+		header.SetEmptyEvdsRoot()
+	}
+	storageData := header.Marshal()
+	if err := tx.Set(getBlockKey(height, hash), storageData); err!=nil {
+		return err
+	}
+	if err := tx.Set(getHashKey(height), hash); err!=nil {
+		return err
+	}
+	if err := tx.Set(getHeaderHeightKey(hash), hbyte(height));err!=nil {
+		return err
+	}
+	if err := b.updateScoreTX(block.Miner, tx);err!=nil {
+		return err
+	}
+	return nil
 }
 
 func (b *badgerDB) putEvidenceTX(hash []byte, evds []*cp.Evidence, height uint64, tx *badger.Txn) error {
@@ -300,7 +508,7 @@ func (b *badgerDB) gcloop() {
 		case <- b.lm.D:
 			return
 			case <- ticker.C:
-				b.RunValueLogGc(0.5)
+				b.RunValueLogGC(0.5)
 		}
 	}
 }

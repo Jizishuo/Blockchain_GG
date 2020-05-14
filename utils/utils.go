@@ -9,6 +9,12 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
+)
+
+const (
+	HashLength = sha256.Size
+	timeFormat = "2020/02/02 02:02:02"
 )
 
 // 检测文件是否存在
@@ -69,4 +75,16 @@ func ParseUPPort(ipPort string) (net.IP, int) {
 		return nil, 0
 	}
 	return ip, port
+}
+//TimeToString 返回时间的文本表示形式;
+//它只接受int64或时间。时间类型
+func TimeToString(t interface{}) string {
+	if int64T, ok := t.(int64); ok {
+		return time.Unix(int64T, 0).Format(timeFormat)
+	}
+	if timeT, ok:= t.(time.Time);ok {
+		return timeT.Format(timeFormat)
+	}
+	logger.Fatal("invalid call to timetostring (%v)\n", t)
+	return ""
 }
