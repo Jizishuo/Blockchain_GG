@@ -17,7 +17,7 @@ type db interface {
 	PutBlock(block *cp.Block, height uint64) error
 	GetHash(height uint64) ([]byte, error)
 
-	GetHeaderViaHeight(height uint64) (*cp.BlockHeader, []byte, error)
+	GetHeaderViaHeight(height uint64) (*cp.BlockHeader, []byte, error) //获取标题维亚高度
 	GetHeaderViaHash(h []byte) (*cp.BlockHeader, uint64, error)
 
 	GetBlockViaHeight(height uint64) (*cp.Block, []byte, error)

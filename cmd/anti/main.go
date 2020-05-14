@@ -4,7 +4,7 @@ import (
 	"Blockchain_GG/crypto"
 	"Blockchain_GG/p2p/peer"
 	"Blockchain_GG/utils"
-	"MY_GO/My_Blog/dao/db"
+	"Blockchain_GG/db"
 	"flag"
 	"Blockchain_GG/p2p"
 	"log"
@@ -59,7 +59,11 @@ func main() {
 	node.Start()
 
 	// db
-	if err = db.Init()
+	if err = db.Init(conf.DataPath); err!=nil {
+		logger.Fatal("init db failed: %v\n", err)
+	}
+	logger.Info("database initialize successfully under the data path: %s\n", conf.DataPath)
+
 
 
 }
