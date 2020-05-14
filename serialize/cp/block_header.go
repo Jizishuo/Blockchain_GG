@@ -11,3 +11,9 @@ type BlockHeader struct {
 	EvidenceRoot []byte
 	pc *powChache
 }
+
+func NewBlockHeaderV1(lastHash []byte, miner []byte, root []byte) *BlockHeader {
+	return &BlockHeader{
+		Version: Core
+	}
+}
