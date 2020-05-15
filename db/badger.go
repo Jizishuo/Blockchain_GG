@@ -20,6 +20,7 @@ type badgerDB struct {
 
 func newBadger() *badgerDB {
 	return &badgerDB{
+
 		lm: utils.NewLoop(1),
 	}
 }

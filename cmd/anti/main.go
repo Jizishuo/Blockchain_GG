@@ -7,8 +7,10 @@ import (
 	"Blockchain_GG/db"
 	"flag"
 	"Blockchain_GG/p2p"
+	"github.com/996.Blockchain/core"
 	"log"
 	"github.com/btcsuite/btcd/btcec"
+	"strconv"
 )
 
 func main() {
@@ -64,6 +66,16 @@ func main() {
 	}
 	logger.Info("database initialize successfully under the data path: %s\n", conf.DataPath)
 
-
+	// core 模块
+	// 返回字符串表示的整数值，用于无符号整型
+	blockDiffLimit, err := strconv.ParseUint(conf.BlockDifficultyLimit, 16, 32)
+	if err != nil {
+		logger.Fatalln(err)
+	}
+	evidenceDiffLimit, err := strconv.ParseUint(conf.EvidenceDifficultyLimit, 16, 32)
+	if err != nil {
+		logger.Fatalln(err)
+	}
+	coerInstance := core.NewCore()
 
 }
