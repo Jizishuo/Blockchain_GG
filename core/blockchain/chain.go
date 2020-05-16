@@ -76,7 +76,7 @@ func (c *Chain) Stop() {
 	c.lm.Stop()
 }
 
-// AddBlocks appends new blocks to the chain
+// 添加块将新块追加到链中
 func (c *Chain) AddBlocks(blocks []*cp.Block, local bool) {
 	if local {
 		c.addBlocks(blocks, local)
@@ -85,7 +85,7 @@ func (c *Chain) AddBlocks(blocks []*cp.Block, local bool) {
 	c.pendingBlocks <- blocks
 }
 
-// NextBlockTarget returns next block required target
+// 下一块目标返回下一个块所需的目标
 func (c *Chain) NextBlockTarget(newBlockTime int64) uint32 {
 	c.branchLock.Lock()
 	defer c.branchLock.Unlock()
@@ -93,14 +93,14 @@ func (c *Chain) NextBlockTarget(newBlockTime int64) uint32 {
 	return c.longestBranch.nextBlockTarget(newBlockTime)
 }
 
-// LatestBlockHash returns the longest branch latest block hash
+// 最新BlockHash返回最长的分支最新块哈希
 func (c *Chain) LatestBlockHash() []byte {
 	c.branchLock.Lock()
 	defer c.branchLock.Unlock()
 	return c.longestBranch.hash()
 }
 
-// GetSyncHash returns the synchronize used block hash and height difference
+// GetSyncHash 返回同步使用的块哈希和高度差异
 func (c *Chain) GetSyncHash(base []byte) (end []byte, heightDiff uint32, err error) {
 	c.branchLock.Lock()
 	defer c.branchLock.Unlock()
@@ -150,7 +150,7 @@ func (c *Chain) GetSyncHash(base []byte) (end []byte, heightDiff uint32, err err
 	return dbLatestHash, hdiff, nil
 }
 
-// GetSyncBlocks returns the synchronize used blocks
+//GetSyncBlocks 返回同步使用的块
 func (c *Chain) GetSyncBlocks(base []byte, end []byte, onlyHeader bool) ([]*cp.Block, error) {
 	c.branchLock.Lock()
 	defer c.branchLock.Unlock()
@@ -164,7 +164,7 @@ func (c *Chain) GetSyncBlocks(base []byte, end []byte, onlyHeader bool) ([]*cp.B
 		iter := endBlock
 		for {
 			if iter.height == baseBlock.height {
-				// ignore the base block
+				// ignore the base block 忽略基块
 				break
 			}
 
@@ -206,7 +206,7 @@ func (c *Chain) GetSyncBlocks(base []byte, end []byte, onlyHeader bool) ([]*cp.B
 	return nil, ErrHashNotFound{base}
 }
 
-// GetSyncBlockHash returns the latest block hash of each branches
+// GetSyncBlockHash 返回每个分支的最新块哈希
 func (c *Chain) GetSyncBlockHash() [][]byte {
 	c.branchLock.Lock()
 	defer c.branchLock.Unlock()
@@ -218,7 +218,7 @@ func (c *Chain) GetSyncBlockHash() [][]byte {
 	return result
 }
 
-// VerifyEvidence verifys the evidence via the matched branch
+// 验证证据通过匹配的分支验证证据
 func (c *Chain) VerifyEvidence(e *cp.Evidence) error {
 	c.branchLock.Lock()
 	defer c.branchLock.Unlock()
@@ -230,8 +230,8 @@ func (c *Chain) VerifyEvidence(e *cp.Evidence) error {
 	return nil
 }
 
-// GetUnstoredBlocks returns unstored blocks with their height
-// the result is sorted by height in decreasing order
+//获取未存储的块返回具有高度的未存储块
+//结果按高度按递减顺序排序
 func (c *Chain) GetUnstoredBlocks() ([]*cp.Block, []uint64) {
 	c.branchLock.Lock()
 	defer c.branchLock.Unlock()
@@ -273,7 +273,7 @@ func (c *Chain) initGenesis(genesis string) error {
 		return err
 	}
 
-	// the genesis block height is 1
+	// the genesis block height is 1 成因块高度为 1
 	c.initFirstBranch(newBlock(cb, 1, true))
 	return nil
 }
@@ -286,6 +286,7 @@ func (c *Chain) initFromDB() error {
 		return err
 	}
 	if lastHeight > ReferenceBlocks {
+		// 只将最后的"参考块"块放入缓存中
 		beginHeight = lastHeight - ReferenceBlocks // only takes the last 'ReferenceBlocks' blocks into cache
 	}
 
@@ -335,7 +336,7 @@ func (c *Chain) loop() {
 	}
 }
 
-// maintain cleans up the chain and flush cache into db
+// maintain cleans up the chain and flush cache into db 维护清理链并将缓存刷新到 db
 func (c *Chain) maintain() {
 	c.branchLock.Lock()
 	defer c.branchLock.Unlock()
@@ -357,7 +358,7 @@ func (c *Chain) maintain() {
 			break
 		}
 
-		// no fork from this block
+		// no fork from this block 此块没有分叉
 		if c.longestBranch.height()-iter.height > alpha {
 			removingBlock := iter
 			if !removingBlock.isStored() {
