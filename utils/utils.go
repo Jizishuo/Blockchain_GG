@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -16,6 +18,11 @@ const (
 	HashLength = sha256.Size
 	timeFormat = "2020/02/02 02:02:02"
 )
+
+var logger = &Logger{
+	Logger:log.New(os.Stdout, "", log.LstdFlags|log.Lshortfile),
+}
+
 
 // 检测文件是否存在
 func AccessCheck(path string) error {
@@ -29,9 +36,22 @@ func AccessCheck(path string) error {
 func FromHex(s string) ([]byte, error) {
 	return hex.DecodeString(s)
 }
-
-var logger = &Logger{
-	Logger:log.New(os.Stdout, "", log.LstdFlags|log.Lshortfile),
+var bufPool = &sync.Pool{
+	// Pool是一个可以分别存取的临时对象的集合
+	New: func() interface {} {
+		return new(bytes.Buffer)
+	},
+}
+// GetBuf gets a *bytes.Buffer from pool
+func GetBuf() *bytes.Buffer {
+	result := bufPool.Get().(*bytes.Buffer)
+	result.Reset() //Reset重设缓冲，因此会丢弃全部内容，等价于b.Truncate(0)
+	return result
+}
+// ReturnBuf returns a *bytes.Buffer to Pool once you don't need it
+func ReturnBuf(buf *bytes.Buffer) {
+	// Put方法将x放入池中
+	bufPool.Put(buf)
 }
 
 // Uint8Len returns bytes length in uint8 type
