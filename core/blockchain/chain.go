@@ -130,7 +130,7 @@ func (c *Chain) GetSyncHash(base []byte) (end []byte, heightDiff uint32, err err
 		return endHash, hdiff, nil
 	}
 
-	// search in the db
+	// search in the db 在 db 中搜索
 	_, baseHeight, err := db.GetHeaderViaHash(base)
 	if err != nil {
 		return nil, 0, ErrHashNotFound{base}
@@ -157,7 +157,7 @@ func (c *Chain) GetSyncBlocks(base []byte, end []byte, onlyHeader bool) ([]*cp.B
 
 	var result []*cp.Block
 
-	// search in the longest branch
+	// search in the longest branch 在最长的分支中搜索
 	baseBlock := c.longestBranch.getBlock(base)
 	endBlock := c.longestBranch.getBlock(end)
 	if baseBlock != nil && endBlock != nil && baseBlock.height < endBlock.height {

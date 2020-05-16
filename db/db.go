@@ -21,7 +21,7 @@ type db interface {
 	GetHeaderViaHash(h []byte) (*cp.BlockHeader, uint64, error)
 
 	GetBlockViaHeight(height uint64) (*cp.Block, []byte, error)
-	GetBlcokViaHash(h []byte) (*cp.Block, uint64, error)
+	GetBlockViaHash(h []byte) (*cp.Block, uint64, error)
 
 	GetEvidenceViaHash(h []byte) (*cp.Evidence, uint64, error)
 	GetEvidenceViaKey(pubKey []byte) ([][]byte, []uint64, error)
@@ -29,7 +29,7 @@ type db interface {
 	HasEvidence(h []byte) bool
 	GetScoreViaKey(pubKey []byte) (uint64, error)
 	GetLatestHeight() (uint64, error)
-	GetLatesHeader() (*cp.BlockHeader, uint64, []byte, error)
+	GetLatestHeader() (*cp.BlockHeader, uint64, []byte, error)
 	Close()
 }
 
@@ -65,8 +65,8 @@ func GetBlockViaHeight(height uint64) (*cp.Block, []byte, error) {
 	return instance.GetBlockViaHeight(height)
 }
 
-func GetBlcokViaHash(h []byte) (*cp.Block, uint64, error) {
-	return instance.GetBlcokViaHash(h)
+func GetBlockViaHash(h []byte) (*cp.Block, uint64, error) {
+	return instance.GetBlockViaHash(h)
 }
 
 func GetEvidenceViaHash(h []byte) (*cp.Evidence, uint64, error) {
@@ -85,8 +85,8 @@ func GetScoreViaKey(pubKey []byte) (uint64, error) {
 func GetLatestHeight() (uint64, error) {
 	return instance.GetLatestHeight()
 }
-func GetLatesHeader() (*cp.BlockHeader, uint64, []byte, error) {
-	return instance.GetLatesHeader()
+func GetLatestHeader() (*cp.BlockHeader, uint64, []byte, error) {
+	return instance.GetLatestHeader()
 }
 
 func Close() {

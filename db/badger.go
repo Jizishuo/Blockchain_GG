@@ -159,7 +159,7 @@ func (b *badgerDB) GetBlockViaHeight(height uint64) (*cp.Block, []byte, error) {
 	return result, hash, err
 }
 
-func (b *badgerDB) GetBlcokViaHash(h []byte) (*cp.Block, uint64, error) {
+func (b *badgerDB) GetBlockViaHash(h []byte) (*cp.Block, uint64, error) {
 	height, err := b.getHeaderHeight(h)
 	if err!=nil {
 		return nil, 0, err
@@ -268,7 +268,7 @@ func (b *badgerDB) GetLatestHeight() (uint64, error) {
 	return result, b.view(rf)
 }
 
-func (b *badgerDB) GetLatesHeader() (*cp.BlockHeader, uint64, []byte, error) {
+func (b *badgerDB) GetLatestHeader() (*cp.BlockHeader, uint64, []byte, error) {
 	lastHeight, err := b.GetLatestHeight()
 	if err != nil {
 		return nil, 0, nil, err
