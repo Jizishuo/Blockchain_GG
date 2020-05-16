@@ -161,11 +161,11 @@ func (b *BlockHeader) Verify() error {
 }
 
 // 获取序列化哈希
-func (b *BlockHeader) GetSerializeHash() []byte {
+func (b *BlockHeader) GetSerializedHash() []byte {
 	return utils.Hash(b.Marshal())
 }
 func (b *BlockHeader) GetPow() *big.Int {
-	return big.NewInt(0).SetBytes(b.GetSerializeHash())
+	return big.NewInt(0).SetBytes(b.GetSerializedHash())
 }
 
 // 是否空证据根

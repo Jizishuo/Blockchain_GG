@@ -24,7 +24,7 @@ type block struct {
 func newBlock(b *cp.Block, height uint64, stored bool) *block {
 	return &block{
 		Block:b,
-		hash: b.GetSerializeHash(),
+		hash: b.GetSerializedHash(),
 		height:height,
 		stored: stored,
 	}
@@ -60,8 +60,8 @@ func (b *block) removeForward(forward *block) {
 }
 
 func (b *block) isBackwardOf(cb *cp.Block) bool {
-	// key := utils.ToHex(cb.GetSerializedHash()) TODO
-	key := utils.ToHex(cb.GetSerializeHash())
+	key := utils.ToHex(cb.GetSerializedHash()) // TODO
+	// key := utils.ToHex(cb.GetSerializeHash())
 	_, ok := b.fordward.Load(key)
 	return ok
 }
