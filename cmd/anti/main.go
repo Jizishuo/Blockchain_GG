@@ -10,9 +10,14 @@ import (
 	"Blockchain_GG/p2p"
 	"Blockchain_GG/core"
 	"Blockchain_GG/rpc"
+	"fmt"
 	"log"
 	"github.com/btcsuite/btcd/btcec"
+	"net/http"
+	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 )
 
 func main() {
@@ -78,7 +83,7 @@ func main() {
 	if err != nil {
 		logger.Fatalln(err)
 	}
-	coerInstance := core.NewCore(&core.Config{
+	coreInstance := core.NewCore(&core.Config{
 		Node: node,
 		NodeType: conf.NodeType,
 		PrivKey: privKey,
@@ -92,5 +97,34 @@ func main() {
 	})
 
 	// local http server
-	heepConfig := &rpc.Config{}
+	httpConfig := &rpc.Config{
+		Port: conf.HTTPPort,
+		C: coreInstance,
+	}
+	httpServer := rpc.NewServer(httpConfig)
+	httpServer.Start()
+
+	// pprof
+	if *pprofPort != 0 {
+		go func() {
+			pprofAddress := fmt.Sprintf("localhost:%d", pprofPort)
+			log.Println(http.ListenAndServe(pprofAddress, nil))
+		}()
+	}
+	// 正常等待关机
+	sc := make(chan os.Signal)
+	// Notify函数让signal包将输入信号转发到c。
+	//如果没有列出要传递的信号，会将所有输入信号传递到c；否则只传递列出的输入信号。
+	signal.Notify(sc, os.Interrupt) //Interrupt（中断信号）和Kill（强制退出信号）
+	signal.Notify(sc, syscall.SIGTERM)
+	select {
+	case <- sc:
+		logger.Infoln("Quiting....")
+		httpServer.Stop()
+		coreInstance.Stop()
+		node.Stop()
+		db.Close()
+		logger.Infoln("Bye!...")
+		return
+	}
 }
