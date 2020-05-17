@@ -9,7 +9,7 @@ import (
 	"flag"
 	"Blockchain_GG/p2p"
 	"Blockchain_GG/core"
-	"github.com/996.Blockchain/rpc"
+	"Blockchain_GG/rpc"
 	"log"
 	"github.com/btcsuite/btcd/btcec"
 	"strconv"
