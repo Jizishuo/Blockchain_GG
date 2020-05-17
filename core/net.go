@@ -70,7 +70,7 @@ func newNet(node p2p.Node, chain *blockchain.Chain, pool *evidencePool, nodeType
 		lm:              utils.NewLoop(2),
 	}
 
-	result.pr = node.AddProtocol(result)
+	result.pr = node.AddProtocol(result) //添加协议
 	return result
 }
 
@@ -128,7 +128,7 @@ func (n *net) send(data []byte, peerID string) {
 		Peer: peerID,
 	}
 }
-
+// 广播
 func (n *net) broadcast(data []byte) {
 	h := utils.Hash(data)
 	encoded := base64.StdEncoding.EncodeToString(h)
@@ -159,6 +159,7 @@ func (n *net) doSend() {
 	}
 }
 
+// 处理recv包
 func (n *net) handleRecvPacket(pd *p2p.PeerData) {
 	var err error
 	var msg *cp.Head
@@ -236,18 +237,22 @@ func (n *net) handleRecvPacket(pd *p2p.PeerData) {
 // step 1. sync the hash of blocks
 // step 2. sync the blocks
 // so it will take 2 * syncInterval time to finish
+// 同步要求邻居分两步同步块：
+//步骤 1.同步块的哈希
+//步骤 2.同步块
+//因此，需要 2 + 同步间隔时间才能完成
 func (n *net) sync() {
-	// if it is not waiting for blocks， do the sync request
+	// if it is not waiting for blocks， do the sync request 如果它不等待块，请执行同步请求
 	if len(n.waitingBlocks) == 0 {
 		n.syncRequest()
 		return
 	}
 
-	// otherwise clean up the timeout wating
+	// otherwise clean up the timeout wating 否则清理超时
 	now := time.Now()
 	var waiting []*waitingBlocks
 	for _, exp := range n.waitingBlocks {
-		// expect transfering a block per 5 seconds
+		// expect transfering a block per 5 seconds 期望每 5 秒传输一个块
 		if now.Sub(exp.lastResponseTime) <= time.Duration(5*maxBlocksNumInResponse)*time.Second {
 			waiting = append(waiting, exp)
 			continue
@@ -263,6 +268,7 @@ func (n *net) sync() {
 
 func (n *net) syncRequest() {
 	// if the sync hash response is empty, send sync request for hash
+	// 如果同步哈希响应为空，则发送哈希的同步请求
 	if len(n.syncHashResp) == 0 {
 		latestHash := n.chain.GetSyncBlockHash()
 		for _, h := range latestHash {
@@ -274,6 +280,7 @@ func (n *net) syncRequest() {
 	}
 
 	// otherwise send sync request for blocks
+	// 否则发送块的同步请求
 	queryFilter := make(map[string]bool)
 	alreadyUptodate := true
 	for peerID, resp := range n.syncHashResp {
@@ -282,7 +289,7 @@ func (n *net) syncRequest() {
 		}
 		alreadyUptodate = false
 
-		// filters the same response
+		// filters the same response 筛选相同的响应
 		queryFlag := fmt.Sprintf("%X-%d", resp.End, resp.HeightDiff)
 		if _, find := queryFilter[queryFlag]; find {
 			continue
@@ -311,18 +318,19 @@ func (n *net) syncRequest() {
 	if !n.inited && alreadyUptodate {
 		n.InitFinishC <- true
 		n.inited = true
-		// reduce the sync request frequency
+		// reduce the sync request frequency 降低同步请求频率
 		n.syncTicker.Stop()
 		n.syncTicker = time.NewTicker(syncInterval)
 		logger.Debug("network for CoreProtocol init finished")
 	}
 }
 
+// 广播区块
 func (n *net) broadcastBlock(b *cp.Block) {
 	content := cp.NewBlockBroadcast(b).Marshal()
 	n.broadcast(content)
 }
-
+// 广播证据
 func (n *net) broadcastEvidence(evds []*cp.Evidence) {
 	content := cp.NewEvidenceBroadcast(evds).Marshal()
 	n.broadcast(content)

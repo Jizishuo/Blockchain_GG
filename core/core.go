@@ -71,7 +71,7 @@ func NewCore(conf *Config) *Core {
 	}
 }
 
-// Stop stops the core module working
+// Stop stops the core module working 停止停止核心模块工作
 func (c *Core) Stop() {
 	if c.mining {
 		c.s.stop()
@@ -84,6 +84,8 @@ func (c *Core) Stop() {
 
 // UploadEvidenceRaw uploads the hash of evidence
 // the node will sign it and broadcast to the network
+// 上传证据原始上传证据哈希
+// 节点将签名并广播到网络
 func (c *Core) UploadEvidenceRaw(evds []*RawEvidence) error {
 	for _, evd := range evds {
 		if len(evd.Hash) != utils.HashLength {
@@ -95,7 +97,7 @@ func (c *Core) UploadEvidenceRaw(evds []*RawEvidence) error {
 	return nil
 }
 
-// UploadEvidence uploads the evidence
+// UploadEvidence uploads the evidence 上传证据上传证据
 func (c *Core) UploadEvidence(evds []*cp.Evidence) error {
 	for _, evd := range evds {
 		if err := c.chain.VerifyEvidence(evd); err != nil {
@@ -110,6 +112,7 @@ func (c *Core) UploadEvidence(evds []*cp.Evidence) error {
 	return nil
 }
 
+// 查询证据
 func (c *Core) QueryEvidence(hash []string) []*EvidenceInfo {
 	return c.queryCache.getEvidence(hash)
 }

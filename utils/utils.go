@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"math/big"
 	"net"
 	"os"
 	"strconv"
@@ -53,6 +54,24 @@ func ReturnBuf(buf *bytes.Buffer) {
 	// Put方法将x放入池中
 	bufPool.Put(buf)
 }
+
+// ReadableBigInt returns more readable format for big.Int
+// 可读 BigInt 返回大格式的可读格式。Int
+func ReadableBigInt(num *big.Int) string {
+	hexStr := fmt.Sprintf("%X", num)
+	length := len(hexStr)
+
+	var result string
+	format := "0x%s..(%d)"
+	cut := 6
+	if length > cut {
+		result = fmt.Sprintf(format, hexStr[0:cut], length)
+	} else {
+		result = fmt.Sprintf(format, hexStr, length)
+	}
+	return result
+}
+
 
 // Uint8Len returns bytes length in uint8 type
 func Uint8Len(data []byte) uint8 {

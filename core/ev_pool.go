@@ -82,7 +82,8 @@ func (e *evidencePool) addEvidence(evds []*cp.Evidence, fromBroadcast bool) {
 	}
 }
 // return next evidence if exists, otherwise return nil
-func (e *evidencePool) netxEvidence() *cp.Evidence {
+// 如果存在，则返回下一个证据，否则返回 nil
+func (e *evidencePool) nextEvidence() *cp.Evidence {
 	e.evdsMutex.Lock()
 	defer e.evdsMutex.Unlock()
 
@@ -151,7 +152,7 @@ func (e *evidencePool) binarySearchInsertIndex(tartget *big.Int) int {
 		}
 	}
 
-	 // target is smaller than all
+	 // target is smaller than all 目标小于所有
 	 if end == 0 {
 	 	return 0
 	 }

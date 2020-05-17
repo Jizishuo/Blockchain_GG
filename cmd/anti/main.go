@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Blockchain_GG/core/blockchain"
 	"Blockchain_GG/crypto"
 	"Blockchain_GG/p2p/peer"
 	"Blockchain_GG/utils"
@@ -8,6 +9,7 @@ import (
 	"flag"
 	"Blockchain_GG/p2p"
 	"Blockchain_GG/core"
+	"github.com/996.Blockchain/rpc"
 	"log"
 	"github.com/btcsuite/btcd/btcec"
 	"strconv"
@@ -76,6 +78,19 @@ func main() {
 	if err != nil {
 		logger.Fatalln(err)
 	}
-	coerInstance := core.NewCore()
+	coerInstance := core.NewCore(&core.Config{
+		Node: node,
+		NodeType: conf.NodeType,
+		PrivKey: privKey,
+		ParallelMine: conf.ParalleMine,
+		Config: &blockchain.Config{
+			BlockTargetLimit: uint32(blockDiffLimit),
+			EvidenceTargetLimit: uint32(evidenceDiffLimit),
+			BlockInterval: conf.BlockInterval,
+			Genesis: conf.Genesis,
+		},
+	})
 
+	// local http server
+	heepConfig := &rpc.Config{}
 }
