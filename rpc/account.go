@@ -1,11 +1,12 @@
 package rpc
 
 import (
+	"github.com/btcsuite/btcd/btcec"
 	"net/http"
 
-	"github.com/btcsuite/btcd/btcec"
 	"Blockchain_GG/crypto"
 	"Blockchain_GG/utils"
+
 )
 
 const (
@@ -61,4 +62,3 @@ func getAccount(w http.ResponseWriter, r *http.Request) {
 		Score:    score,
 	}, w)
 }
-

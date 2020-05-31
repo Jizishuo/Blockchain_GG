@@ -21,9 +21,8 @@ const (
 )
 
 var logger = &Logger{
-	Logger:log.New(os.Stdout, "", log.LstdFlags|log.Lshortfile),
+	Logger: log.New(os.Stdout, "", log.LstdFlags|log.Lshortfile),
 }
-
 
 // 检测文件是否存在
 func AccessCheck(path string) error {
@@ -37,18 +36,21 @@ func AccessCheck(path string) error {
 func FromHex(s string) ([]byte, error) {
 	return hex.DecodeString(s)
 }
+
 var bufPool = &sync.Pool{
 	// Pool是一个可以分别存取的临时对象的集合
-	New: func() interface {} {
+	New: func() interface{} {
 		return new(bytes.Buffer)
 	},
 }
+
 // GetBuf gets a *bytes.Buffer from pool
 func GetBuf() *bytes.Buffer {
 	result := bufPool.Get().(*bytes.Buffer)
 	result.Reset() //Reset重设缓冲，因此会丢弃全部内容，等价于b.Truncate(0)
 	return result
 }
+
 // ReturnBuf returns a *bytes.Buffer to Pool once you don't need it
 func ReturnBuf(buf *bytes.Buffer) {
 	// Put方法将x放入池中
@@ -72,11 +74,11 @@ func ReadableBigInt(num *big.Int) string {
 	return result
 }
 
-
 // Uint8Len returns bytes length in uint8 type
 func Uint8Len(data []byte) uint8 {
 	return uint8(len(data))
 }
+
 // Uint16Len returns bytes length in uint16 type
 func Uint16Len(data []byte) uint16 {
 	return uint16(len(data))
@@ -105,7 +107,7 @@ func ParseUPPort(ipPort string) (net.IP, int) {
 	}
 	// ParseIP将s解析为IP地址，并返回该地址。如果s不是合法的IP地址文本表示，ParseIP会返回nil
 	ip := net.ParseIP(s[0])
-	if ip == nil || ip.To4()==nil {
+	if ip == nil || ip.To4() == nil {
 		return nil, 0
 	}
 	// 是ParseInt(s, 10, 0)的简写
@@ -115,13 +117,14 @@ func ParseUPPort(ipPort string) (net.IP, int) {
 	}
 	return ip, port
 }
+
 //TimeToString 返回时间的文本表示形式;
 //它只接受int64或时间。时间类型
 func TimeToString(t interface{}) string {
 	if int64T, ok := t.(int64); ok {
 		return time.Unix(int64T, 0).Format(timeFormat)
 	}
-	if timeT, ok:= t.(time.Time);ok {
+	if timeT, ok := t.(time.Time); ok {
 		return timeT.Format(timeFormat)
 	}
 	logger.Fatal("invalid call to timetostring (%v)\n", t)

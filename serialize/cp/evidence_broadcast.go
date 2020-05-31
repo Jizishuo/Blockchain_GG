@@ -8,6 +8,7 @@ import (
 
 	"Blockchain_GG/utils"
 )
+
 // 证据广播
 type EvidenceBroadcast struct {
 	*Head
@@ -88,4 +89,3 @@ func (e *EvidenceBroadcast) String() string {
 
 	return fmt.Sprintf("%d evidence: %s", len(e.Evds), hashPrefix)
 }
-

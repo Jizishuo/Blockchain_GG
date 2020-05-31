@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 )
+
 // 区块广播
 type BlockBroadcast struct {
 	*Head

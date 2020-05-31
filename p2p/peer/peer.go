@@ -10,9 +10,9 @@ import (
 // Peer is a node that can 连接 to
 // 同行
 type Peer struct {
-	IP net.IP
+	IP   net.IP
 	Port int
-	Key *btcec.PublicKey
+	Key  *btcec.PublicKey
 	//我们使用 base32（压缩公钥）作为 peer ID
 	//而不是像base58（哈希（公钥））等其他人员）。
 	//由于哈希用于隐藏真正的 onwer
@@ -26,9 +26,9 @@ type Peer struct {
 // NewPeer create a Peer, key might be nil if you don't know it
 func NewPeer(ip net.IP, port int, key *btcec.PublicKey) *Peer {
 	p := &Peer{
-		IP: ip,
+		IP:   ip,
 		Port: port,
-		Key: key,
+		Key:  key,
 	}
 	if key != nil {
 		p.ID = crypto.PubKeyToID(key)

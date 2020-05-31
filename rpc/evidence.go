@@ -274,4 +274,3 @@ func queryEvidence(w http.ResponseWriter, r *http.Request) {
 	successWithDataResponse(resp, w)
 	return
 }
-

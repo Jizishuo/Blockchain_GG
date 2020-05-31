@@ -56,4 +56,3 @@ func failedResponse(msg string, w http.ResponseWriter) {
 func badRequestResponse(w http.ResponseWriter) {
 	doResponse(CodeBadRequest, "", nil, w)
 }
-

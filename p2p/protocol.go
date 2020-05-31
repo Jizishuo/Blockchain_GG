@@ -3,7 +3,6 @@ package p2p
 import (
 	"errors"
 	"fmt"
-
 )
 
 // 协议是 p2p 网络协议必须实现的接口
@@ -19,9 +18,8 @@ type ProtocolRunner interface {
 	// 在成功时返回零，或 ErrPeer 未找到，ErrNoPeers 失败
 	Send(dp *PeerData) error
 	// GetRecvChan 返回一个获取网络数据的通道
-	GetRecvChan() <- chan *PeerData
+	GetRecvChan() <-chan *PeerData
 }
-
 
 // PeerData 是从 ne2ks 发送或接收时使用的数据结构
 type PeerData struct {
@@ -47,15 +45,15 @@ var ErrNoPeers = errors.New("Not found any peer on the network yep")
 
 type protocolRunner struct {
 	protocol Protocol
-	Data chan *PeerData
+	Data     chan *PeerData
 	sendFunc func(p Protocol, dp *PeerData) error
-	n *node
+	n        *node
 }
 
 func newProtocolRunner(protocol Protocol, sendFunc func(p Protocol, dp *PeerData) error) *protocolRunner {
 	renner := &protocolRunner{
 		protocol: protocol,
-		Data: make(chan *PeerData, 2048),
+		Data:     make(chan *PeerData, 2048),
 		sendFunc: sendFunc,
 	}
 	return renner
@@ -65,6 +63,6 @@ func (p *protocolRunner) Send(dp *PeerData) error {
 	return p.sendFunc(p.protocol, dp)
 }
 
-func (p *protocolRunner) GetRecvChan() <- chan *PeerData {
+func (p *protocolRunner) GetRecvChan() <-chan *PeerData {
 	return p.Data
 }

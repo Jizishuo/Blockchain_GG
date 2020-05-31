@@ -1,9 +1,9 @@
 package core
 
 import (
+	"Blockchain_GG/core/blockchain"
 	"Blockchain_GG/serialize/cp"
 	"Blockchain_GG/utils"
-	"Blockchain_GG/core/blockchain"
 	"github.com/btcsuite/btcd/btcec"
 	"math/big"
 	"sync"
@@ -12,8 +12,8 @@ import (
 const evdsCacheSize = 1024
 
 type RawEvidence struct {
-	Hash []byte
-	Description []byte  // 描述
+	Hash        []byte
+	Description []byte // 描述
 }
 
 type weighteEvidence struct {
@@ -23,18 +23,18 @@ type weighteEvidence struct {
 
 // 证据池
 type evidencePool struct {
-	key *btcec.PrivateKey
-	raws chan *RawEvidence
-	evds []*weighteEvidence //ascending order 升序
+	key       *btcec.PrivateKey
+	raws      chan *RawEvidence
+	evds      []*weighteEvidence //ascending order 升序
 	evdsMutex sync.Mutex
-	broadcast chan <- []*cp.Evidence
-	lm *utils.LoopMode
+	broadcast chan<- []*cp.Evidence
+	lm        *utils.LoopMode
 }
 
 func newEvidencePool(key *btcec.PrivateKey) *evidencePool {
 	return &evidencePool{
-		key: key,
-		raws:make(chan *RawEvidence, evdsCacheSize),
+		key:  key,
+		raws: make(chan *RawEvidence, evdsCacheSize),
 	}
 }
 
@@ -48,10 +48,10 @@ func (e *evidencePool) start() {
 		defer e.lm.Done()
 		for {
 			select {
-			case <- e.lm.D:
+			case <-e.lm.D:
 				return
-				case raw := <-e.raws:
-					e.calculateRaw(raw)
+			case raw := <-e.raws:
+				e.calculateRaw(raw)
 			}
 		}
 	}()
@@ -81,6 +81,7 @@ func (e *evidencePool) addEvidence(evds []*cp.Evidence, fromBroadcast bool) {
 		e.broadcast <- evds
 	}
 }
+
 // return next evidence if exists, otherwise return nil
 // 如果存在，则返回下一个证据，否则返回 nil
 func (e *evidencePool) nextEvidence() *cp.Evidence {
@@ -98,7 +99,7 @@ func (e *evidencePool) nextEvidence() *cp.Evidence {
 func (e *evidencePool) calculateRaw(raw *RawEvidence) {
 	pubKey := e.key.PubKey()
 	evd := cp.NewEvidenceV1(raw.Hash, []byte(raw.Description), pubKey.SerializeCompressed())
-	if err := evd.Sign(e.key); err!=nil {
+	if err := evd.Sign(e.key); err != nil {
 		logger.Warn("sign evidence failed: %v\n", err)
 		return
 	}
@@ -117,11 +118,10 @@ func (e *evidencePool) calculateRaw(raw *RawEvidence) {
 	}
 }
 
-
 func (e *evidencePool) insert(we *weighteEvidence) {
 	e.evdsMutex.Lock()
 	defer e.evdsMutex.Unlock()
-	i:= e.binarySearchInsertIndex(we.weight)
+	i := e.binarySearchInsertIndex(we.weight)
 	if i == -1 {
 		e.evds = append(e.evds, we)
 		return
@@ -142,7 +142,7 @@ func (e *evidencePool) binarySearchInsertIndex(tartget *big.Int) int {
 	end := len(e.evds)
 	for {
 		mid := (begin + end) / 2
-		if e.evds[mid].weight.Cmp(tartget) >=0 {
+		if e.evds[mid].weight.Cmp(tartget) >= 0 {
 			end = mid
 		} else {
 			begin = mid + 1
@@ -152,16 +152,16 @@ func (e *evidencePool) binarySearchInsertIndex(tartget *big.Int) int {
 		}
 	}
 
-	 // target is smaller than all 目标小于所有
-	 if end == 0 {
-	 	return 0
-	 }
-	 // target is larger than all
-	 if begin == len(e.evds) {
-	 	return -1
-	 }
-	 if e.evds[begin].weight.Cmp(tartget) > 0 {
-	 	return begin
-	 }
-	 return begin + 1
+	// target is smaller than all 目标小于所有
+	if end == 0 {
+		return 0
+	}
+	// target is larger than all
+	if begin == len(e.evds) {
+		return -1
+	}
+	if e.evds[begin].weight.Cmp(tartget) > 0 {
+		return begin
+	}
+	return begin + 1
 }

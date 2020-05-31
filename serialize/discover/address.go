@@ -10,7 +10,7 @@ import (
 )
 
 type Address struct {
-	IP net.IP
+	IP   net.IP
 	Port int32
 }
 
@@ -20,7 +20,7 @@ func NewAddress(ipstr string, port int32) *Address {
 		return nil
 	}
 	return &Address{
-		IP: ip,
+		IP:   ip,
 		Port: port,
 	}
 }
@@ -42,13 +42,13 @@ func UnmarshalAddress(data io.Reader) (*Address, error) {
 		return nil, err
 	}
 	ipBuf := make([]byte, ipLen)
-	if err := binary.Read(data, binary.BigEndian, ipBuf); err!=nil{
+	if err := binary.Read(data, binary.BigEndian, ipBuf); err != nil {
 		return nil, err
 	}
-	if err := result.IP.UnmarshalText(ipBuf); err !=nil {
+	if err := result.IP.UnmarshalText(ipBuf); err != nil {
 		return nil, err
 	}
-	if err := binary.Read(data, binary.BigEndian, &result.Port); err!=nil {
+	if err := binary.Read(data, binary.BigEndian, &result.Port); err != nil {
 		return nil, err
 	}
 	return result, nil

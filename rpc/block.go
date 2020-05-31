@@ -111,7 +111,7 @@ func getBlockViaRange(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ..?range=xx
+	// ..?range=xx  10进制--的int64
 	height, err := strconv.ParseInt(param[0], 10, 64)
 	if err == nil {
 		if height == -1 {
@@ -191,4 +191,3 @@ func getBlockViaHash(w http.ResponseWriter, r *http.Request) {
 	responseBlocks(w, result)
 	return
 }
-

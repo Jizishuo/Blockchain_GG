@@ -15,7 +15,7 @@ type Ping struct {
 
 func NewPing(pubKey []byte) *Ping {
 	return &Ping{
-		Head:NewHeadV1(MsgPing),
+		Head:   NewHeadV1(MsgPing),
 		PubKey: pubKey,
 	}
 }

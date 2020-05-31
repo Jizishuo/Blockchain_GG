@@ -13,29 +13,29 @@ import (
 
 const (
 	EvidenceMaxDescriptionLen = 140
-	EvidenceBasicLen = 1+4+1+1+1+2+2
+	EvidenceBasicLen          = 1 + 4 + 1 + 1 + 1 + 2 + 2
 )
 
 // 证据
 type Evidence struct {
-	Version uint8
-	Nonce uint32
-	Hash []byte
+	Version     uint8
+	Nonce       uint32
+	Hash        []byte
 	Description []byte
-	PubKey []byte
-	Sig []byte
-	pc *powCache
+	PubKey      []byte
+	Sig         []byte
+	pc          *powCache
 }
 
 func NewEvidenceV1(hash, description, pubKey []byte) *Evidence {
 	return &Evidence{
-		Version: CoreProtocolV1,
-		Nonce: 0,
-		Hash: hash,
+		Version:     CoreProtocolV1,
+		Nonce:       0,
+		Hash:        hash,
 		Description: description,
-		PubKey: pubKey,
-		Sig: nil,
-		pc: newPowCache(),
+		PubKey:      pubKey,
+		Sig:         nil,
+		pc:          newPowCache(),
 	}
 }
 
@@ -47,38 +47,38 @@ func UnmarshalEvidence(data io.Reader) (*Evidence, error) {
 	var sigLen uint16
 	var err error
 
-	if err = binary.Read(data, binary.BigEndian, &result.Version);err!=nil {
+	if err = binary.Read(data, binary.BigEndian, &result.Version); err != nil {
 		return nil, err
 	}
-	if err = binary.Read(data, binary.BigEndian, &result.Nonce); err!=nil {
+	if err = binary.Read(data, binary.BigEndian, &result.Nonce); err != nil {
 		return nil, err
 	}
-	if err = binary.Read(data, binary.BigEndian, &hashLen);err!=nil {
+	if err = binary.Read(data, binary.BigEndian, &hashLen); err != nil {
 		return nil, err
 	}
 	result.Hash = make([]byte, hashLen)
-	if err = binary.Read(data, binary.BigEndian, result.Hash);err!=nil {
+	if err = binary.Read(data, binary.BigEndian, result.Hash); err != nil {
 		return nil, err
 	}
-	if err = binary.Read(data, binary.BigEndian, &descriptionLen);err!=nil{
+	if err = binary.Read(data, binary.BigEndian, &descriptionLen); err != nil {
 		return nil, err
 	}
 	result.Description = make([]byte, descriptionLen)
-	if err = binary.Read(data, binary.BigEndian,result.Description);err!=nil {
+	if err = binary.Read(data, binary.BigEndian, result.Description); err != nil {
 		return nil, err
 	}
-	if err = binary.Read(data, binary.BigEndian, &pubKeyLen); err!=nil {
+	if err = binary.Read(data, binary.BigEndian, &pubKeyLen); err != nil {
 		return nil, err
 	}
 	result.PubKey = make([]byte, pubKeyLen)
-	if err = binary.Read(data, binary.BigEndian, result.PubKey);err!=nil {
+	if err = binary.Read(data, binary.BigEndian, result.PubKey); err != nil {
 		return nil, err
 	}
-	if err = binary.Read(data, binary.BigEndian, &sigLen);err!=nil {
+	if err = binary.Read(data, binary.BigEndian, &sigLen); err != nil {
 		return nil, err
 	}
 	result.Sig = make([]byte, sigLen)
-	if err = binary.Read(data, binary.BigEndian, result.Sig);err!=nil {
+	if err = binary.Read(data, binary.BigEndian, result.Sig); err != nil {
 		return nil, err
 	}
 	return result, nil
@@ -135,7 +135,7 @@ func (e *Evidence) Verify() error {
 	if len(e.PubKey) != btcec.PubKeyBytesLenCompressed {
 		return fmt.Errorf("invalid public key length %d", len(e.PubKey))
 	}
-	if err := VerifyDescription(string(e.Description)); err!=nil {
+	if err := VerifyDescription(string(e.Description)); err != nil {
 		return err
 	}
 	signature, err := btcec.ParseSignature(e.Sig, btcec.S256())
@@ -153,7 +153,7 @@ func (e *Evidence) Verify() error {
 }
 
 func (e *Evidence) Size() int {
-	return EvidenceBasicLen + len(e.Hash) + len(e.PubKey) +len(e.Description) + len(e.Sig)
+	return EvidenceBasicLen + len(e.Hash) + len(e.PubKey) + len(e.Description) + len(e.Sig)
 }
 
 func (e *Evidence) GetSerializedHash() []byte {

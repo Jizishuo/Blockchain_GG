@@ -21,19 +21,19 @@ type connManager interface {
 }
 
 type connManagerImp struct {
-	mutex sync.Mutex
-	conns map[string]*conn // <peer id, conn>
+	mutex      sync.Mutex
+	conns      map[string]*conn // <peer id, conn>
 	maxPeerNum int
-	removing chan string
-	lm *utils.LoopMode
+	removing   chan string
+	lm         *utils.LoopMode
 }
 
 func newConnManager(maxPeerNum int) connManager {
 	return &connManagerImp{
-		conns: make(map[string]*conn),
+		conns:      make(map[string]*conn),
 		maxPeerNum: maxPeerNum,
-		removing: make(chan string, maxPeerNum),
-		lm: utils.NewLoop(1),
+		removing:   make(chan string, maxPeerNum),
+		lm:         utils.NewLoop(1),
 	}
 }
 
@@ -127,7 +127,7 @@ func (c *connManagerImp) String() string {
 
 	var result string
 	for k, v := range c.conns {
-		result += "[" + k[:6] + " " +v.p.Address() + "]"
+		result += "[" + k[:6] + " " + v.p.Address() + "]"
 	}
 	return result
 }
@@ -138,9 +138,9 @@ func (c *connManagerImp) loop() {
 
 	for {
 		select {
-		case <- c.lm.D:
+		case <-c.lm.D:
 			return
-		case rmID := <- c.removing:
+		case rmID := <-c.removing:
 			c.mutex.Lock()
 			delete(c.conns, rmID)
 			c.mutex.Unlock()

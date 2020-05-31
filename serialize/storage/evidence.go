@@ -13,7 +13,7 @@ type Evidence struct {
 func UnmaishalEvidence(data io.Reader) (*Evidence, error) {
 	result := &Evidence{}
 	var err error
-	if result.Evidence, err = cp.UnmarshalEvidence(data);err!=nil {
+	if result.Evidence, err = cp.UnmarshalEvidence(data); err != nil {
 		return nil, err
 	}
 	return result, nil

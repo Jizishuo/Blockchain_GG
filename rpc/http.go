@@ -88,4 +88,3 @@ func (s *Server) Stop() {
 		logger.Warn("HTTP server shutdown err:%v\n", err)
 	}
 }
-

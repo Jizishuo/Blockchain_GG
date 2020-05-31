@@ -8,17 +8,17 @@ import (
 )
 
 type Head struct {
-	Version uint8
-	Type DiscvMsgType //uint8
-	Time int64
+	Version  uint8
+	Type     DiscvMsgType //uint8
+	Time     int64
 	Reserved uint16
 }
 
 func NewHeadV1(t DiscvMsgType) *Head {
 	return &Head{
-		Version: DiscoverV1,
-		Type: t,
-		Time: time.Now().Unix(),
+		Version:  DiscoverV1,
+		Type:     t,
+		Time:     time.Now().Unix(),
 		Reserved: uint16(0),
 	}
 }

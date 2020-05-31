@@ -1,18 +1,18 @@
 package main
 
 import (
+	"Blockchain_GG/core"
 	"Blockchain_GG/core/blockchain"
 	"Blockchain_GG/crypto"
-	"Blockchain_GG/p2p/peer"
-	"Blockchain_GG/utils"
 	"Blockchain_GG/db"
-	"flag"
 	"Blockchain_GG/p2p"
-	"Blockchain_GG/core"
+	"Blockchain_GG/p2p/peer"
 	"Blockchain_GG/rpc"
+	"Blockchain_GG/utils"
+	"flag"
 	"fmt"
-	"log"
 	"github.com/btcsuite/btcd/btcec"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -32,7 +32,7 @@ func main() {
 	utils.SetLogLevel(conf.LogLevel)
 	logger := utils.GetStdoutLog()
 
-	// 载入 key
+	// conf.Key.Path 文件路径 载入 私钥 key
 	var privKey *btcec.PrivateKey
 	if conf.Key.Type == crypto.PlainKeyType {
 		privKey, err = crypto.RestorePKey(conf.Key.Path)
@@ -46,9 +46,9 @@ func main() {
 			logger.Fatal("resotore pkey failed: %v\n", err)
 		}
 	}
-	pubKey := privKey.PubKey()
+	pubKey := privKey.PubKey() // 公钥
 
-	// p2p 供应 peer provider
+	// p2p 供应 peer provider  创建和管理比特币对等网络，及上行下行数据库的处理
 	provider := peer.NewProvider(conf.IP, conf.Port, pubKey)
 	seeds := parseSeeds(conf.Seeds)
 	provider.AddSeeds(seeds)
@@ -56,19 +56,19 @@ func main() {
 
 	// p2p node
 	nodeConfig := &p2p.Config{
-		NodeIP: conf.IP,
-		NodePort: conf.Port,
-		Provider: provider,
+		NodeIP:     conf.IP,
+		NodePort:   conf.Port,
+		Provider:   provider,
 		MaxPeerNum: conf.MaxPeers,
-		PrivKey: privKey,
-		Type: conf.NodeType,
-		ChainID: conf.ChainID,
+		PrivKey:    privKey,
+		Type:       conf.NodeType,
+		ChainID:    conf.ChainID,
 	}
 	node := p2p.NewNode(nodeConfig)
 	node.Start()
 
 	// db
-	if err = db.Init(conf.DataPath); err!=nil {
+	if err = db.Init(conf.DataPath); err != nil {
 		logger.Fatal("init db failed: %v\n", err)
 	}
 	logger.Info("database initialize successfully under the data path: %s\n", conf.DataPath)
@@ -84,22 +84,22 @@ func main() {
 		logger.Fatalln(err)
 	}
 	coreInstance := core.NewCore(&core.Config{
-		Node: node,
-		NodeType: conf.NodeType,
-		PrivKey: privKey,
+		Node:         node,
+		NodeType:     conf.NodeType,
+		PrivKey:      privKey,
 		ParallelMine: conf.ParalleMine,
 		Config: &blockchain.Config{
-			BlockTargetLimit: uint32(blockDiffLimit),
+			BlockTargetLimit:    uint32(blockDiffLimit),
 			EvidenceTargetLimit: uint32(evidenceDiffLimit),
-			BlockInterval: conf.BlockInterval,
-			Genesis: conf.Genesis,
+			BlockInterval:       conf.BlockInterval,
+			Genesis:             conf.Genesis,
 		},
 	})
 
 	// local http server
 	httpConfig := &rpc.Config{
 		Port: conf.HTTPPort,
-		C: coreInstance,
+		C:    coreInstance,
 	}
 	httpServer := rpc.NewServer(httpConfig)
 	httpServer.Start()
@@ -118,7 +118,7 @@ func main() {
 	signal.Notify(sc, os.Interrupt) //Interrupt（中断信号）和Kill（强制退出信号）
 	signal.Notify(sc, syscall.SIGTERM)
 	select {
-	case <- sc:
+	case <-sc:
 		logger.Infoln("Quiting....")
 		httpServer.Stop()
 		coreInstance.Stop()

@@ -8,20 +8,19 @@ import (
 )
 
 const (
-	coolingTime = peerExpiredTime*2
-	coolingExpiredTime = 5*time.Minute
+	coolingTime        = peerExpiredTime * 2
+	coolingExpiredTime = 5 * time.Minute
 )
 
 // 表imp(进出口)
 type tableImp struct {
-	selfID string
-	seeds map[string]*pstate // "ip:port" as key
-	peers map[string]*pstate // id as key id = base32(compressPubKey)
+	selfID       string
+	seeds        map[string]*pstate   // "ip:port" as key
+	peers        map[string]*pstate   // id as key id = base32(compressPubKey)
 	coolingPeers map[string]time.Time // id as key
-	r *rand.Rand
-	lock sync.Mutex
+	r            *rand.Rand
+	lock         sync.Mutex
 }
-
 
 // table matains 所有peer 信息
 type table interface {
@@ -45,7 +44,7 @@ func newTable(selfID string) table {
 		peers:        make(map[string]*pstate),
 		coolingPeers: make(map[string]time.Time),
 		// 给定的种子创建一个伪随机资源
-		r:            rand.New(rand.NewSource(time.Now().Unix())),
+		r: rand.New(rand.NewSource(time.Now().Unix())),
 	}
 }
 
@@ -77,7 +76,7 @@ func (t *tableImp) getPeers(expect int, exclude map[string]bool) []*Peer {
 	if peerSize <= expect {
 		return peers
 	}
-	for i:=0; i <peerSize; i++ {
+	for i := 0; i < peerSize; i++ {
 		// 一个取值范围在[0,n)的伪随机int值，如果n<=0会panic
 		j := t.r.Intn(peerSize)
 		peers[i], peers[j] = peers[j], peers[i]
@@ -107,8 +106,8 @@ func (t *tableImp) getPeersToPing() []*Peer {
 		result = append(result, seed.Peer)
 	}
 	return result
-
 }
+
 func (t *tableImp) getPeersToGetNeighbours() []*Peer {
 	t.lock.Lock()
 	defer t.lock.Unlock()
@@ -116,7 +115,7 @@ func (t *tableImp) getPeersToGetNeighbours() []*Peer {
 	var result []*Peer
 	for _, peer := range t.peers {
 		if peer.isTimeToGetNeighbours() {
-			result =append(result, peer.Peer)
+			result = append(result, peer.Peer)
 			peer.updataGetNeighbourTime()
 		}
 	}
@@ -141,7 +140,7 @@ func (t *tableImp) recvPong(p *Peer) {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 
-	if peer, ok := t.peers[p.ID];ok {
+	if peer, ok := t.peers[p.ID]; ok {
 		peer.updataActiveTime()
 		return
 	}

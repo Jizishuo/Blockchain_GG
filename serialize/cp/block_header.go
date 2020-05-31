@@ -12,26 +12,26 @@ import (
 )
 
 type BlockHeader struct {
-	Version uint8
-	Time int64
-	Nonce uint32
-	Target uint32
-	LastHash []byte
-	Miner []byte
+	Version      uint8
+	Time         int64
+	Nonce        uint32
+	Target       uint32
+	LastHash     []byte
+	Miner        []byte
 	EvidenceRoot []byte
-	pc  *powCache
+	pc           *powCache
 }
 
 func NewBlockHeaderV1(lastHash []byte, miner []byte, root []byte) *BlockHeader {
 	return &BlockHeader{
-		Version: CoreProtocolV1,
-		Time: time.Now().Unix(),
-		Nonce: 0,
-		Target: 0,
-		LastHash: lastHash,
-		Miner: miner,
+		Version:      CoreProtocolV1,
+		Time:         time.Now().Unix(),
+		Nonce:        0,
+		Target:       0,
+		LastHash:     lastHash,
+		Miner:        miner,
 		EvidenceRoot: root,
-		pc: newPowCache(),
+		pc:           newPowCache(),
 	}
 }
 
@@ -42,37 +42,37 @@ func UnmarshalBlockHeader(data io.Reader) (*BlockHeader, error) {
 	var evRootLen uint8
 	var err error
 
-	if err = binary.Read(data, binary.BigEndian, &result.Version); err!=nil {
+	if err = binary.Read(data, binary.BigEndian, &result.Version); err != nil {
 		return nil, err
 	}
-	if err = binary.Read(data, binary.BigEndian, &result.Time); err!= nil {
+	if err = binary.Read(data, binary.BigEndian, &result.Time); err != nil {
 		return nil, err
 	}
-	if err = binary.Read(data, binary.BigEndian, &result.Nonce); err!=nil {
+	if err = binary.Read(data, binary.BigEndian, &result.Nonce); err != nil {
 		return nil, err
 	}
 	if err = binary.Read(data, binary.BigEndian, &result.Target); err != nil {
 		return nil, err
 	}
-	if err = binary.Read(data, binary.BigEndian, &lastHashLen); err!=nil {
+	if err = binary.Read(data, binary.BigEndian, &lastHashLen); err != nil {
 		return nil, err
 	}
 	result.LastHash = make([]byte, lastHashLen)
-	if err = binary.Read(data, binary.BigEndian, result.LastHash);err!=nil{
+	if err = binary.Read(data, binary.BigEndian, result.LastHash); err != nil {
 		return nil, err
 	}
-	if err = binary.Read(data, binary.BigEndian, &minerLen);err!=nil{
+	if err = binary.Read(data, binary.BigEndian, &minerLen); err != nil {
 		return nil, err
 	}
 	result.Miner = make([]byte, minerLen)
-	if err = binary.Read(data, binary.BigEndian, result.Miner);err!=nil {
+	if err = binary.Read(data, binary.BigEndian, result.Miner); err != nil {
 		return nil, err
 	}
-	if err = binary.Read(data, binary.BigEndian, &evRootLen); err!=nil{
+	if err = binary.Read(data, binary.BigEndian, &evRootLen); err != nil {
 		return nil, err
 	}
 	result.EvidenceRoot = make([]byte, evRootLen)
-	if err = binary.Read(data, binary.BigEndian, result.EvidenceRoot); err!=nil {
+	if err = binary.Read(data, binary.BigEndian, result.EvidenceRoot); err != nil {
 		return nil, err
 	}
 	return result, nil
@@ -87,7 +87,7 @@ func (b *BlockHeader) Marshal() []byte {
 	binary.Write(result, binary.BigEndian, b.Target)
 
 	lastHashLen := utils.Uint8Len(b.LastHash)
-	binary.Write(result, binary.BigEndian,lastHashLen)
+	binary.Write(result, binary.BigEndian, lastHashLen)
 	binary.Write(result, binary.BigEndian, b.LastHash)
 
 	minerLen := utils.Uint8Len(b.Miner)
@@ -106,14 +106,14 @@ func (b *BlockHeader) UpdateTime() {
 
 func (b *BlockHeader) ShallowCopy() *BlockHeader {
 	return &BlockHeader{
-		Version: b.Version,
-		Time: b.Time,
-		Nonce: b.Nonce,
-		Target: b.Target,
-		LastHash: b.LastHash,
-		Miner: b.Miner,
+		Version:      b.Version,
+		Time:         b.Time,
+		Nonce:        b.Nonce,
+		Target:       b.Target,
+		LastHash:     b.LastHash,
+		Miner:        b.Miner,
 		EvidenceRoot: b.EvidenceRoot,
-		pc: newPowCache(),
+		pc:           newPowCache(),
 	}
 }
 
@@ -134,7 +134,7 @@ func (b *BlockHeader) NextNonce() *big.Int {
 		b.pc.setCache(marshal, pow)
 		return pow
 	}
-	const nonceIndex = 1+8 // after version and time
+	const nonceIndex = 1 + 8 // after version and time
 	b.Nonce++
 	return b.pc.update(b.Nonce, nonceIndex)
 }

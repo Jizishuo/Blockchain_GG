@@ -9,9 +9,9 @@ import (
 
 type block struct {
 	*cp.Block
-	hash []byte
+	hash   []byte
 	height uint64
-	stored bool  // 储存
+	stored bool // 储存
 	// 向后块是此块的父块，只有一个
 	backward *block
 
@@ -23,9 +23,9 @@ type block struct {
 
 func newBlock(b *cp.Block, height uint64, stored bool) *block {
 	return &block{
-		Block:b,
-		hash: b.GetSerializedHash(),
-		height:height,
+		Block:  b,
+		hash:   b.GetSerializedHash(),
+		height: height,
 		stored: stored,
 	}
 }

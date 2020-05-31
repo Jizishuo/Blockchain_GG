@@ -25,13 +25,13 @@ func UnmarshalBlock(data io.Reader) (*Block, error) {
 	if err = binary.Read(data, binary.BigEndian, &evdsSize); err != nil {
 		return nil, err
 	}
-	for i:=uint16(0); i < evdsSize; i++ {
+	for i := uint16(0); i < evdsSize; i++ {
 		var hashLen uint8
 		if err = binary.Read(data, binary.BigEndian, &hashLen); err != nil {
 			return nil, err
 		}
 		hash := make([]byte, hashLen)
-		if err = binary.Read(data, binary.BigEndian, hash); err !=nil {
+		if err = binary.Read(data, binary.BigEndian, hash); err != nil {
 			return nil, err
 		}
 		result.EvdsHash = append(result.EvdsHash, hash)

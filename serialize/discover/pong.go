@@ -11,14 +11,14 @@ import (
 type Pong struct {
 	*Head
 	PingHash []byte
-	PubKey []byte
+	PubKey   []byte
 }
 
 func NewPong(pingHash []byte, pubKey []byte) *Pong {
 	return &Pong{
-		Head: NewHeadV1(MsgPong),
+		Head:     NewHeadV1(MsgPong),
 		PingHash: pingHash,
-		PubKey: pubKey,
+		PubKey:   pubKey,
 	}
 }
 
@@ -52,14 +52,14 @@ func UnmarshalPong(data io.Reader) (*Pong, error) {
 		return nil, err
 	}
 	result.PingHash = make([]byte, pingHashLen)
-	if err = binary.Read(data, binary.BigEndian, result.PingHash); err!=nil {
+	if err = binary.Read(data, binary.BigEndian, result.PingHash); err != nil {
 		return nil, err
 	}
 	if err = binary.Read(data, binary.BigEndian, &pubKeyLen); err != nil {
 		return nil, err
 	}
 	result.PubKey = make([]byte, pubKeyLen)
-	if err = binary.Read(data, binary.BigEndian, result.PubKey); err!= nil {
+	if err = binary.Read(data, binary.BigEndian, result.PubKey); err != nil {
 		return nil, err
 	}
 	return result, nil

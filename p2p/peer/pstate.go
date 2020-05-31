@@ -3,31 +3,31 @@ package peer
 import "time"
 
 const (
-	peerExpiredTime = 35*time.Second
-	getNeighbourInterval = 15*time.Second
-	pingInterval = 10*time.Second
+	peerExpiredTime      = 35 * time.Second
+	getNeighbourInterval = 15 * time.Second
+	pingInterval         = 10 * time.Second
 )
 
 var (
-	initTimepoint = time.Unix(0,0)
+	initTimepoint = time.Unix(0, 0)
 )
 
 // p状态
 type pstate struct {
 	*Peer
 	// 种子不应该删除，一旦他们被添加到peer
-	isSeed bool
-	hasPingBefore bool
-	lastActiveTime time.Time
+	isSeed               bool
+	hasPingBefore        bool
+	lastActiveTime       time.Time
 	lastGetNeighbourTime time.Time
 }
 
 func newPState(p *Peer, isSeed bool) *pstate {
 	return &pstate{
-		Peer:p,
-		isSeed: isSeed,
-		hasPingBefore: false,
-		lastActiveTime: initTimepoint,
+		Peer:                 p,
+		isSeed:               isSeed,
+		hasPingBefore:        false,
+		lastActiveTime:       initTimepoint,
 		lastGetNeighbourTime: initTimepoint,
 	}
 }

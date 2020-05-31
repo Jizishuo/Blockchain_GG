@@ -135,4 +135,3 @@ func (p *parallelMine) pow(difficulty *big.Int, header *cp.BlockHeader, begin, e
 		}
 	}
 }
-

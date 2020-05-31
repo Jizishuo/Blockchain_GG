@@ -43,7 +43,7 @@ func NewUDPServer(ip net.IP, port int) UDPServer {
 	}
 }
 
-
+// 只能接收通道
 func (u *udpServer) GetRecvChannel() <-chan *UDPPacket {
 	return u.recvQ
 }
@@ -56,7 +56,7 @@ func (u *udpServer) Send(packet *UDPPacket) {
 }
 func (u *udpServer) Start() bool {
 	udpAddr := &net.UDPAddr{
-		IP: u.ip,
+		IP:   u.ip,
 		Port: u.port,
 	}
 	var err error
@@ -75,17 +75,18 @@ func (u *udpServer) Stop() {
 	}
 }
 
-func(u *udpServer) recv() {
+func (u *udpServer) recv() {
 	u.lm.Add()
 	defer u.lm.Done()
 	for {
 		select {
-		case <- u.lm.D:
+		case <-u.lm.D:
 			return
 		default:
-			packBuf := make([]byte, udpRecvBufferSize)
+			packBuf := make([]byte, udpRecvBufferSize) // 1024
 			// 设置读操作绝对期限
 			u.conn.SetReadDeadline(time.Now().Add(udpRecvTimeout))
+			// 从c读取一个UDP数据包，将有效负载拷贝到packBuf，返回拷贝字节数和数据包来源地址
 			n, Addr, err := u.conn.ReadFromUDP(packBuf)
 
 			if err != nil {
@@ -114,9 +115,10 @@ func (u *udpServer) send() {
 	defer u.lm.Done()
 	for {
 		select {
-		case <- u.lm.D:
+		case <-u.lm.D:
 			return
-		case packet := <- u.sendQ:
+		case packet := <-u.sendQ:
+			// WriteToUDP通过c向地址addr发送一个数据包，b为包的有效负载，返回写入的字节
 			_, err := u.conn.WriteToUDP(packet.Data, packet.Addr)
 			if err != nil {
 				logger.Warn("udp server send to %v failed: %v, sieze; %v\n",

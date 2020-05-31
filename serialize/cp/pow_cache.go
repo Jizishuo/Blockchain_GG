@@ -10,8 +10,8 @@ import (
 // 结果只能读，不应修改
 type powCache struct {
 	marshalCache []byte
-	powCache *big.Int
-	cache bool
+	powCache     *big.Int
+	cache        bool
 }
 
 func newPowCache() *powCache {

@@ -111,4 +111,3 @@ func (b *BlockRequest) IsOnlyHeader() bool {
 func (b *BlockRequest) String() string {
 	return fmt.Sprintf("Base %X End %X OnlyHeader %d", b.Base, b.End, b.OnlyHeader)
 }
-

@@ -9,51 +9,51 @@ import (
 )
 
 const (
-	tcpConnQSize = 128
-	tcpListenTimeout = time.Second * 2
-	tcpRecvQSize = 1024
+	tcpConnQSize      = 128
+	tcpListenTimeout  = time.Second * 2
+	tcpRecvQSize      = 1024
 	tcpReadBufferSize = 2048
-	tcpRecvTimeoout = time.Second * 2
-	tcpSendQSize = 1024
+	tcpRecvTimeoout   = time.Second * 2
+	tcpSendQSize      = 1024
 )
 
 type TCPServer interface {
-	GetTCPAcceptConnChannel() <- chan TCPConn
+	GetTCPAcceptConnChannel() <-chan TCPConn
 	Addr() string
 	Start() bool
 	Stop()
 }
 
 type tcpConn struct {
-	conn *net.TCPConn
-	split func(received *bytes.Buffer) ([][]byte, error)
+	conn         *net.TCPConn
+	split        func(received *bytes.Buffer) ([][]byte, error)
 	disconnectCb func(addr net.Addr)
-	recvQ chan []byte
-	sendQ chan []byte
-	lm *LoopMode
+	recvQ        chan []byte
+	sendQ        chan []byte
+	lm           *LoopMode
 }
 
 type tcpServer struct {
-	ip net.IP
+	ip   net.IP
 	port int
 	//代表一个TCP网络的监听者。使用者应尽量使用Listener接口而不是假设（网络连接为）TCP。
-	ln *net.TCPListener
+	ln         *net.TCPListener
 	acceptConn chan TCPConn
-	lm *LoopMode
+	lm         *LoopMode
 }
 
 type TCPConn interface {
 	Send(data []byte)
-	GetRecvChannel() <- chan []byte
+	GetRecvChannel() <-chan []byte
 	SetSplitFunc(func(received *bytes.Buffer) ([][]byte, error))
 	SetDisconnectCb(func(addr net.Addr))
 	RemoteAddr() net.Addr
-	Disconnect()  //断开
+	Disconnect() //断开
 }
 
 func TCPConnectTo(ip net.IP, port int) (TCPConn, error) {
 	targetAddr := &net.TCPAddr{
-		IP: ip,
+		IP:   ip,
 		Port: port,
 	}
 	conn, err := net.DialTCP("tcp", nil, targetAddr)
@@ -65,10 +65,10 @@ func TCPConnectTo(ip net.IP, port int) (TCPConn, error) {
 
 func newTCPConn(conn *net.TCPConn) TCPConn {
 	result := &tcpConn{
-		conn: conn,
+		conn:  conn,
 		recvQ: make(chan []byte, tcpRecvQSize),
 		sendQ: make(chan []byte, tcpRecvQSize),
-		lm: NewLoop(2),
+		lm:    NewLoop(2),
 	}
 	result.start()
 	return result
@@ -76,13 +76,13 @@ func newTCPConn(conn *net.TCPConn) TCPConn {
 
 func NewTCPServer(ip net.IP, port int) TCPServer {
 	return &tcpServer{
-		ip: ip,
-		port: port,
+		ip:         ip,
+		port:       port,
 		acceptConn: make(chan TCPConn, tcpConnQSize),
-		lm: NewLoop(1),
+		lm:         NewLoop(1),
 	}
 }
-func (s *tcpServer) GetTCPAcceptConnChannel() <- chan TCPConn {
+func (s *tcpServer) GetTCPAcceptConnChannel() <-chan TCPConn {
 	return s.acceptConn
 }
 func (s *tcpServer) Addr() string {
@@ -90,7 +90,7 @@ func (s *tcpServer) Addr() string {
 }
 func (s *tcpServer) Start() bool {
 	lnAddr := &net.TCPAddr{
-		IP: s.ip,
+		IP:   s.ip,
 		Port: s.port,
 	}
 	var err error
@@ -115,7 +115,7 @@ func (s *tcpServer) loop() {
 
 	for {
 		select {
-		case <- s.lm.D:
+		case <-s.lm.D:
 			return
 		default:
 			s.ln.SetDeadline(time.Now().Add(tcpListenTimeout))
@@ -131,12 +131,11 @@ func (s *tcpServer) loop() {
 	}
 }
 
-
-func(c *tcpConn) Send(data []byte) {
+func (c *tcpConn) Send(data []byte) {
 	c.sendQ <- data
 }
 
-func (c *tcpConn) GetRecvChannel() <- chan []byte {
+func (c *tcpConn) GetRecvChannel() <-chan []byte {
 	return c.recvQ
 }
 
@@ -145,12 +144,13 @@ func (c *tcpConn) SetSplitFunc(f func(recevied *bytes.Buffer) ([][]byte, error))
 }
 
 func (c *tcpConn) SetDisconnectCb(f func(addr net.Addr)) {
-	c.disconnectCb =f
+	c.disconnectCb = f
 }
 
 func (c *tcpConn) RemoteAddr() net.Addr {
 	return c.conn.RemoteAddr()
 }
+
 // 断开
 func (c *tcpConn) Disconnect() {
 	c.stop()
@@ -179,7 +179,7 @@ func (c *tcpConn) recv() {
 
 	for {
 		select {
-		case <- c.lm.D:
+		case <-c.lm.D:
 			return
 		default:
 			// 设置读操作绝对期限，实现了Conn接口的SetReadDeadline方法
@@ -230,16 +230,15 @@ func (c *tcpConn) send() {
 
 	for {
 		select {
-		case <- c.lm.D:
+		case <-c.lm.D:
 			return
-		case pkt := <- c.sendQ:
+		case pkt := <-c.sendQ:
 			_, err := c.conn.Write(pkt)
 			if err != nil {
 				logger.Warn("send to %v failed: %v, close connection\n",
 					c.RemoteAddr(), err)
 				go c.stop()
 			}
-
 
 		}
 	}

@@ -1,9 +1,9 @@
 package peer
 
 import (
+	"Blockchain_GG/crypto"
 	"Blockchain_GG/serialize/discover"
 	"Blockchain_GG/utils"
-	"Blockchain_GG/crypto"
 	"bytes"
 	"github.com/btcsuite/btcd/btcec"
 	"net"
@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	msgDiscardTime int64 = 8 // 8s
-	maxNeighboursRspNum = 8  // 最大邻居数量
-	pingHashExpiredTime = peerExpiredTime
+	msgDiscardTime      int64 = 8 // 8s
+	maxNeighboursRspNum       = 8 // 最大邻居数量
+	pingHashExpiredTime       = peerExpiredTime
 )
 
 var (
@@ -22,17 +22,15 @@ var (
 
 // 供应 服务
 type provider struct {
-	ip net.IP
-	port int
-	compressedKey []byte
-	udp utils.UDPServer
-	table table
-	pingHash map[string]time.Time // hash as key
+	ip            net.IP
+	port          int
+	compressedKey []byte //公钥序列化压缩
+	udp           utils.UDPServer
+	table         table
+	pingHash      map[string]time.Time // hash as key
 
 	lm *utils.LoopMode
 }
-
-
 
 func NewProvider(ipstr string, port int, publicKey *btcec.PublicKey) Provider {
 	ip := net.ParseIP(ipstr)
@@ -85,25 +83,24 @@ func (p *provider) loop() {
 	//并会每隔时间段d就向该通道发送当时的时间。
 	//它会调整时间间隔或者丢弃tick信息以适应反应慢的接收者。
 	//如果d<=0会panic。关闭该Ticker可以释放相关资源
-	refrsshTicker := time.NewTicker(peerExpiredTime*2)
-	taskTicker := time.NewTicker(time.Second*2)
+	refrsshTicker := time.NewTicker(peerExpiredTime * 2)
+	taskTicker := time.NewTicker(time.Second * 2)
 	recvQ := p.udp.GetRecvChannel()
 
 	for {
 		select {
 		case <-p.lm.D:
 			return
-		case <- taskTicker.C:
+		case <-taskTicker.C:
 			p.ping()
 			p.getNeighbours()
-		case pkt := <- recvQ :
+		case pkt := <-recvQ:
 			p.handleRecv(pkt)
 		case <-refrsshTicker.C:
 			p.refresh()
 		}
 	}
 }
-
 
 func (p *provider) ping() {
 	targets := p.table.getPeersToPing()
@@ -162,7 +159,7 @@ func (p *provider) handleRecv(pkt *utils.UDPPacket) {
 
 // 处理ping
 func (p *provider) handlePing(data []byte, remoteAddr *net.UDPAddr) {
-	ping ,err := discover.UnmarshalPing(bytes.NewBuffer(data))
+	ping, err := discover.UnmarshalPing(bytes.NewBuffer(data))
 	if err != nil {
 		logger.Warn("receive error ping:%v\n", err)
 		return
@@ -223,14 +220,14 @@ func (p *provider) handleGetNeigoubours(data []byte, remoteAddr *net.UDPAddr) {
 	exclude := make(map[string]bool)
 	exclude[remotoID] = true
 
-	neighbours := p.table.getPeers(maxNeighboursRspNum,exclude)
+	neighbours := p.table.getPeers(maxNeighboursRspNum, exclude)
 	neighboursMsg := p.genNeighbours(neighbours)
 	p.send(neighboursMsg, remoteAddr)
 
 	// also notify the neighbours about the getter
 	putMsg := p.genNeighbours([]*Peer{NewPeer(remoteAddr.IP, remoteAddr.Port, remotePubKey)})
-	for _, n :=range neighbours {
-		if neighbourAddr, err := net.ResolveUDPAddr("udp", n.Address()); err==nil {
+	for _, n := range neighbours {
+		if neighbourAddr, err := net.ResolveUDPAddr("udp", n.Address()); err == nil {
 			p.send(putMsg, neighbourAddr)
 		}
 	}

@@ -16,7 +16,7 @@ type GetNeighbours struct {
 
 func NewGetNeighbours(pubKey []byte) *GetNeighbours {
 	return &GetNeighbours{
-		Head: NewHeadV1(MsgGetNeighbours),
+		Head:   NewHeadV1(MsgGetNeighbours),
 		PubKey: pubKey,
 	}
 }

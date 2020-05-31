@@ -23,10 +23,10 @@ import "sync"
 */
 
 type LoopMode struct {
-	working bool
+	working     bool
 	routinesNum int
-	waitGroup sync.WaitGroup
-	D chan bool
+	waitGroup   sync.WaitGroup
+	D           chan bool
 }
 
 // NewLoop 返回 LoopMode.Param 例程是长期运行运行操作例程的数量（必须 |0）
@@ -35,9 +35,9 @@ func NewLoop(routines int) *LoopMode {
 		return nil
 	}
 	return &LoopMode{
-		working: false,
+		working:     false,
 		routinesNum: routines,
-		D: make(chan bool, routines),
+		D:           make(chan bool, routines),
 	}
 }
 func (l *LoopMode) StartWorking() {

@@ -95,4 +95,3 @@ Neighboures
 Nodes size      2
 Nodes           sizeof(Node) * Nodes size
 */
-

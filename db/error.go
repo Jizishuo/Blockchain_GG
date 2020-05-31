@@ -6,7 +6,7 @@ import (
 )
 
 type ErrInvalidHeight struct {
-	put uint64
+	put    uint64
 	expect uint64
 }
 

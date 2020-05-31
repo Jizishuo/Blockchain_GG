@@ -14,18 +14,18 @@ type BlockHeader struct {
 
 func NewBlockHeader(h *cp.BlockHeader, height uint64) *BlockHeader {
 	return &BlockHeader{
-		BlockHeader:h,
-		Height: height,
+		BlockHeader: h,
+		Height:      height,
 	}
 }
 
 func UnmarshalBlockHeader(data io.Reader) (*BlockHeader, error) {
 	result := &BlockHeader{}
 	var err error
-	if result.BlockHeader, err = cp.UnmarshalBlockHeader(data);err!=nil {
+	if result.BlockHeader, err = cp.UnmarshalBlockHeader(data); err != nil {
 		return nil, err
 	}
-	if err = binary.Read(data, binary.BigEndian, &result.Height);err!=nil {
+	if err = binary.Read(data, binary.BigEndian, &result.Height); err != nil {
 		return nil, err
 	}
 	return result, nil

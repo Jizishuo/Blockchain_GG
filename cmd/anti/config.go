@@ -1,12 +1,12 @@
 package main
 
 import (
+	"Blockchain_GG/crypto"
 	"Blockchain_GG/p2p/peer"
 	"Blockchain_GG/params"
 	"Blockchain_GG/utils"
 	"encoding/json"
 	"fmt"
-	"Blockchain_GG/crypto"
 	"io/ioutil"
 	"net"
 	"runtime"
@@ -59,25 +59,25 @@ func parserConfig(cf string) (*config, error) {
 }
 
 func verifyConfig(c *config) error {
-	if c.NodeType != params.FullNode &&c.NodeType != params.LifhtNode {
+	if c.NodeType != params.FullNode && c.NodeType != params.LightNode {
 		return fmt.Errorf("invalid node type:%d", c.NodeType)
 	}
 
-	if c.NodeType == params.LifhtNode {
+	if c.NodeType == params.LightNode {
 		return fmt.Errorf("not support light node now")
 	}
 	// 解析为IP地址，并返回该地址 To4将一个IPv4地址转换为4字节表示。如果ip不是IPv4地址，To4会返回nil。
-	if ip := net.ParseIP(c.IP);ip == nil || ip.To4() == nil {
+	if ip := net.ParseIP(c.IP); ip == nil || ip.To4() == nil {
 		return fmt.Errorf("invalid IPv4:%d", c.IP)
 	}
-	if c.Port <=0 || c.Port > 65535 {
+	if c.Port <= 0 || c.Port > 65535 {
 		return fmt.Errorf("invalid port :%d", c.Port)
 	}
-	if c. MaxPeers <= 0 {
+	if c.MaxPeers <= 0 {
 		return fmt.Errorf("invalid max perr number: %d", c.MaxPeers)
 	}
 
-	if c.LogLevel < utils.LogErrorLevel || c.LogLevel >utils.LogDebugLevel {
+	if c.LogLevel < utils.LogErrorLevel || c.LogLevel > utils.LogDebugLevel {
 		return fmt.Errorf("invalid log level: %d", c.LogLevel)
 	}
 	if err := utils.AccessCheck(c.DataPath); err != nil {
@@ -108,7 +108,7 @@ func verifyConfig(c *config) error {
 		return fmt.Errorf("invalid genesis")
 	}
 
-	if c.HTTPPort <=0 || c.HTTPPort > 65535 || c.HTTPPort == c.Port {
+	if c.HTTPPort <= 0 || c.HTTPPort > 65535 || c.HTTPPort == c.Port {
 		return fmt.Errorf("invalid http port: %d", c.HTTPPort)
 	}
 

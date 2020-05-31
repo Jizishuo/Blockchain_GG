@@ -1,8 +1,8 @@
 package cp
 
 import (
-	"encoding/binary"
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"io"
 )
@@ -15,8 +15,8 @@ type Block struct {
 
 func NewBlock(header *BlockHeader, evds []*Evidence) *Block {
 	return &Block{
-		BlockHeader:header,
-		Evds: evds,
+		BlockHeader: header,
+		Evds:        evds,
 	}
 }
 
@@ -94,5 +94,3 @@ func (b *Block) ShallowCopy(onlyHeader bool) *Block {
 		Evds:        evds,
 	}
 }
-
-

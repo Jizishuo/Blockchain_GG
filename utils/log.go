@@ -33,8 +33,8 @@ const (
 
 var (
 	stdoutLog *Logger
-	stdout *log.Logger
-	logLevel = LogDebugLevel
+	stdout    *log.Logger
+	logLevel  = LogDebugLevel
 )
 
 func init() {
@@ -56,35 +56,35 @@ func GetStdoutLog() *Logger {
 
 type Logger struct {
 	*log.Logger
-	fatalLevelStr string
+	fatalLevelStr   string
 	fatalLevelStrln string
-	errLevelStr string
-	errLevelStrln string
-	warnLevelStr string
-	warnLevelStrln string
-	infoLevelStr string
-	infoLevelStrln string
-	debugLevelStr string
+	errLevelStr     string
+	errLevelStrln   string
+	warnLevelStr    string
+	warnLevelStrln  string
+	infoLevelStr    string
+	infoLevelStrln  string
+	debugLevelStr   string
 	debugLevelStrln string
 }
 
 func NewLogger(tag string) *Logger {
 	prefix := tag
 	if len(tag) != 0 {
-		prefix = "[" +tag + "]"
+		prefix = "[" + tag + "]"
 	}
 	return &Logger{
-		 stdout,
-		 strings.Replace(fatalLevelStr, "TAG", prefix, -1),
-		 strings.Replace(fatalLevelStrln, "TAG", prefix, -1),
-		 strings.Replace(errLevelStr, "TAG", prefix, -1),
-		 strings.Replace(errLevelStrln, "TAG", prefix, -1),
-		 strings.Replace(warnLevelStr, "TAG", prefix, -1),
-		 strings.Replace(warnLevelStrln, "TAG", prefix, -1),
-		 strings.Replace(infoLevelStr, "TAG", prefix, -1),
-		 strings.Replace(infoLevelStrln, "TAG", prefix, -1),
-		 strings.Replace(debugLevelStr, "TAG", prefix, -1),
-		 strings.Replace(debugLevelStrln, "TAG", prefix, -1),
+		stdout,
+		strings.Replace(fatalLevelStr, "TAG", prefix, -1),
+		strings.Replace(fatalLevelStrln, "TAG", prefix, -1),
+		strings.Replace(errLevelStr, "TAG", prefix, -1),
+		strings.Replace(errLevelStrln, "TAG", prefix, -1),
+		strings.Replace(warnLevelStr, "TAG", prefix, -1),
+		strings.Replace(warnLevelStrln, "TAG", prefix, -1),
+		strings.Replace(infoLevelStr, "TAG", prefix, -1),
+		strings.Replace(infoLevelStrln, "TAG", prefix, -1),
+		strings.Replace(debugLevelStr, "TAG", prefix, -1),
+		strings.Replace(debugLevelStrln, "TAG", prefix, -1),
 	}
 }
 

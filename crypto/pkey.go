@@ -13,12 +13,12 @@ import (
 */
 const (
 	PlainKeyType = 1
-	PlainKey = ".pKey"
+	PlainKey     = ".pKey"
 )
 
 // 从文件还原私钥还原密钥
 func RestorePKey(path string) (*btcec.PrivateKey, error) {
-	keyFile := path + "/" +PlainKey
+	keyFile := path + "/" + PlainKey
 	hexPrivKey, err := readKeyFile(keyFile)
 	if err != nil {
 		return nil, err

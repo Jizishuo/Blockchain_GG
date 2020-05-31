@@ -7,23 +7,22 @@ import (
 
 type recvHandller = func(peer string, protocolID uint8, data []byte)
 
-
 type conn struct {
-	node *Node
-	p *peer.Peer
-	conn utils.TCPConn
-	ec codec
+	node    *Node
+	p       *peer.Peer
+	conn    utils.TCPConn
+	ec      codec
 	handler recvHandller
-	lm *utils.LoopMode
+	lm      *utils.LoopMode
 }
 
 func newConn(p *peer.Peer, nc utils.TCPConn, ec codec, handler recvHandller) *conn {
 	c := &conn{
-		p :p,
-		conn: nc,
-		ec: ec,
+		p:       p,
+		conn:    nc,
+		ec:      ec,
 		handler: handler,
-		lm: utils.NewLoop(1),
+		lm:      utils.NewLoop(1),
 	}
 	return c
 }
@@ -46,9 +45,9 @@ func (c *conn) loop() {
 	recvC := c.conn.GetRecvChannel()
 	for {
 		select {
-		case <- c.lm.D:
+		case <-c.lm.D:
 			return
-		case pkt:= <- recvC:
+		case pkt := <-recvC:
 			var ok bool
 			var payload []byte
 			var protocolID uint8
@@ -68,7 +67,6 @@ func (c *conn) loop() {
 		}
 	}
 }
-
 
 func (c *conn) send(protocolID uint8, data []byte) {
 	cipherText, err := c.ec.encrypt(data)

@@ -38,22 +38,27 @@ func byteh(data []byte) uint64 {
 func getHeaderKey(height uint64, hash []byte) []byte {
 	return append(headerPrefix, append(hbyte(height), hashSuffix...)...)
 }
+
 // h..n
 func getHashKey(height uint64) []byte {
 	return append(headerPrefix, append(hbyte(height), headerPrefix...)...)
 }
+
 // H..
 func getHeaderHeightKey(hash []byte) []byte {
 	return append(headerHeightPrefix, hash...)
 }
+
 // b..
 func getBlockKey(height uint64, hash []byte) []byte {
 	return append(blockPrefix, append(hbyte(height), hash...)...)
 }
+
 // e..
 func getEvidenceKey(height uint64, hash []byte) []byte {
 	return append(evidencePrefix, append(hbyte(height), hash...)...)
 }
+
 // E..
 func getEvidenceHeightKey(hash []byte) []byte {
 	return append(evidenceHeightPrefix, hash...)

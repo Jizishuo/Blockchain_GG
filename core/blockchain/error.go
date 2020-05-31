@@ -1,7 +1,9 @@
 package blockchain
+
 import (
 	"fmt"
 )
+
 // 已提交日期
 type ErrAlreadyUpToDate struct {
 	reqHash []byte

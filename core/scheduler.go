@@ -156,4 +156,3 @@ func (s *scheduler) genEmptyBlock(lastHash []byte) *cp.Block {
 
 	return block
 }
-

@@ -7,7 +7,7 @@ import (
 
 const (
 	handshakeProtocolID = 0
-	nonceSize = 12
+	nonceSize           = 12
 )
 
 // 谈判

@@ -10,13 +10,13 @@ import (
 
 // 笔记
 type Node struct {
-	Addr *Address
+	Addr   *Address
 	PubKey []byte
 }
 
 func NewNode(addr *Address, pubKey []byte) *Node {
 	return &Node{
-		Addr: addr,
+		Addr:   addr,
 		PubKey: pubKey,
 	}
 }
@@ -41,7 +41,7 @@ func UnmarshalNode(data io.Reader) (*Node, error) {
 		return nil, err
 	}
 	result.PubKey = make([]byte, pubKeyLen)
-	if err = binary.Read(data, binary.BigEndian, result);err !=nil {
+	if err = binary.Read(data, binary.BigEndian, result); err != nil {
 		return nil, err
 	}
 	return result, nil

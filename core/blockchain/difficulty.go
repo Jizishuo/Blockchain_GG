@@ -2,12 +2,10 @@ package blockchain
 
 import (
 	"Blockchain_GG/utils"
+	"fmt"
 	"math/big"
 	"time"
-	"fmt"
-
 )
-
 
 const (
 	//	(difficulty target)难度目标是 uint32 类型（4 字节）

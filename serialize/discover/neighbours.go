@@ -15,7 +15,7 @@ type Neighbours struct {
 
 func NewNeighbours(nodes []*Node) *Neighbours {
 	return &Neighbours{
-		Head:NewHeadV1(MsgNeighbours),
+		Head:  NewHeadV1(MsgNeighbours),
 		Nodes: nodes,
 	}
 }
@@ -42,7 +42,7 @@ func UnmarshalNeighbours(data io.Reader) (*Neighbours, error) {
 	if err = binary.Read(data, binary.BigEndian, &nodesNum); err != nil {
 		return nil, err
 	}
-	for i := uint16(0);i<nodesNum;i++ {
+	for i := uint16(0); i < nodesNum; i++ {
 		var node *Node
 		if node, err = UnmarshalNode(data); err != nil {
 			return nil, err
@@ -55,7 +55,7 @@ func UnmarshalNeighbours(data io.Reader) (*Neighbours, error) {
 
 func (n *Neighbours) String() string {
 	result := fmt.Sprintf("Head %v", n.Head)
-	for i , node := range n.Nodes {
+	for i, node := range n.Nodes {
 		result += fmt.Sprintf("[%d] %v", i, node)
 	}
 	return result

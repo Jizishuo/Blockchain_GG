@@ -60,12 +60,12 @@ func splitTCPStream(received *bytes.Buffer) ([][]byte, error) {
 	var length uint32
 	var packets [][]byte
 
-	for received.Len() >tcpHeaderSize {
+	for received.Len() > tcpHeaderSize {
 		// 阅读对接收没有影响
 		peeker := bytes.NewReader(received.Bytes())
 		binary.Read(peeker, binary.BigEndian, &length)
 
-		packetLen:= tcpHeaderSize + length
+		packetLen := tcpHeaderSize + length
 		if received.Len() < int(packetLen) {
 			break
 		}

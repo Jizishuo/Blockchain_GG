@@ -128,6 +128,7 @@ func (n *net) send(data []byte, peerID string) {
 		Peer: peerID,
 	}
 }
+
 // 广播
 func (n *net) broadcast(data []byte) {
 	h := utils.Hash(data)
@@ -330,6 +331,7 @@ func (n *net) broadcastBlock(b *cp.Block) {
 	content := cp.NewBlockBroadcast(b).Marshal()
 	n.broadcast(content)
 }
+
 // 广播证据
 func (n *net) broadcastEvidence(evds []*cp.Evidence) {
 	content := cp.NewEvidenceBroadcast(evds).Marshal()

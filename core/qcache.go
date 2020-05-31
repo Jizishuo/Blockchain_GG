@@ -46,6 +46,7 @@ type EvidenceInfo struct {
 	BlockHash []byte
 	Time      int64
 }
+
 // 账户信息
 type AccountInfo struct {
 	EvdsHash [][]byte

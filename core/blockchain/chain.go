@@ -1,11 +1,11 @@
 package blockchain
 
 import (
+	"Blockchain_GG/db"
+	"Blockchain_GG/serialize/cp"
 	"Blockchain_GG/utils"
 	"bytes"
 	"fmt"
-	"Blockchain_GG/db"
-	"Blockchain_GG/serialize/cp"
 	"sync"
 	"time"
 )
@@ -24,14 +24,14 @@ const (
 var logger = utils.NewLogger("chain")
 
 type Chain struct {
-	PassiveChangeNotify chan bool
+	PassiveChangeNotify chan bool // 被动更改通知
 
 	oldestBlock   *block
-	branches      []*branch
-	longestBranch *branch
+	branches      []*branch //分支
+	longestBranch *branch   //
 	lastHeight    uint64
 	branchLock    sync.Mutex
-	pendingBlocks chan []*cp.Block
+	pendingBlocks chan []*cp.Block // 等待区块
 	lm            *utils.LoopMode
 }
 
@@ -441,6 +441,7 @@ func (c *Chain) getBranch(blochHash []byte) *branch {
 	}
 	return nil
 }
+
 //创建分止
 func (c *Chain) createBranch(newBlock *cp.Block) (*branch, error) {
 	var result *branch
@@ -468,6 +469,7 @@ func (c *Chain) createBranch(newBlock *cp.Block) (*branch, error) {
 
 	return nil, fmt.Errorf("not found branch for last hash %X", lastHash)
 }
+
 // 获取最长分支
 func (c *Chain) getLongestBranch() *branch {
 	var longestBranch *branch
@@ -485,6 +487,7 @@ func (c *Chain) getLongestBranch() *branch {
 	}
 	return longestBranch
 }
+
 //通知检查
 func (c *Chain) notifyCheck() {
 	longestBranch := c.getLongestBranch()

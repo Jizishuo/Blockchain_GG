@@ -1,18 +1,18 @@
 package db
 
 import (
-	"Blockchain_GG/utils"
 	"Blockchain_GG/serialize/cp"
+	"Blockchain_GG/utils"
 )
 
 var (
-	logger = utils.NewLogger("db")
-	instance db  //实例
+	logger   = utils.NewLogger("db")
+	instance db //实例
 )
 
 type db interface {
 	Init(path string) error
-	HasGenesis() bool  //成因
+	HasGenesis() bool //成因
 	PutGenesis(block *cp.Block) error
 	PutBlock(block *cp.Block, height uint64) error
 	GetHash(height uint64) ([]byte, error)
@@ -33,12 +33,10 @@ type db interface {
 	Close()
 }
 
-
 func Init(path string) error {
 	instance = newBadger()
 	return instance.Init(path)
 }
-
 
 func HasGenesis() bool {
 	return instance.HasGenesis()

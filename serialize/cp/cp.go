@@ -7,13 +7,14 @@ const (
 	CoreProtocolV1 = 1
 
 	// core messsage type
-	MsgSyncReq = 1
-	MsgSyncResp = 2
-	MsgBlockRequest = 3
-	MsgBlockResponse = 4
-	MsgBlockBroadcast = 5
+	MsgSyncReq           = 1
+	MsgSyncResp          = 2
+	MsgBlockRequest      = 3
+	MsgBlockResponse     = 4
+	MsgBlockBroadcast    = 5
 	MsgEvidenceBroadcast = 6
 )
+
 var (
 	// 	空证据根用于块标题的字段
 	//	这意味着块不包含任何证据
